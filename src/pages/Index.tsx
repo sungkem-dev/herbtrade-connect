@@ -22,7 +22,7 @@ const Index = () => {
           }}
         />
         <div className="container mx-auto px-4 z-10 text-center text-white">
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 animate-fade-in">
+          <h1 className="text-5xl md:text-6xl font-bold mb-6 animate-fade-in text-primary-foreground">
             Simplify Your Herbal Export with HerBlocX
           </h1>
           <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto animate-slide-up">
@@ -117,7 +117,7 @@ const Index = () => {
       {/* CTA Section */}
       <section className="py-20 hero-gradient text-white">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl font-bold mb-6">Ready to Start Trading?</h2>
+          <h2 className="text-4xl font-bold mb-6 text-primary-foreground">Ready to Start Trading?</h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto">
             Join thousands of verified buyers and sellers in the global herbal trade marketplace
           </p>
