@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -52,7 +52,7 @@ const Login = () => {
             <Leaf className="h-12 w-12 text-primary" />
           </div>
           <CardTitle className="text-3xl font-bold">Welcome to HerBlocX</CardTitle>
-          <CardDescription>Sign up or log in to start trading</CardDescription>
+          <CardDescription>Log in to your account to start trading</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -96,8 +96,17 @@ const Login = () => {
             </div>
 
             <Button type="submit" className="w-full" size="lg">
-              CONTINUE
+              Log In
             </Button>
+
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground">
+                Don't have an account?{" "}
+                <Link to="/register" className="text-primary font-medium hover:underline">
+                  Sign up here
+                </Link>
+              </p>
+            </div>
 
             <p className="text-xs text-center text-muted-foreground">
               By continuing, you agree to our{" "}

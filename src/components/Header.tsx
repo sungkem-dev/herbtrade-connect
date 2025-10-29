@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { ShoppingCart, Search, User, LogOut, Leaf } from "lucide-react";
+import { ShoppingCart, Search, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { authService } from "@/lib/auth";
@@ -38,7 +38,7 @@ export const Header = () => {
               Shop
             </Link>
             <Link to="/about" className="text-sm font-medium hover:text-primary transition-colors">
-              About Us
+              About
             </Link>
             <Link to="/contact" className="text-sm font-medium hover:text-primary transition-colors">
               Contact

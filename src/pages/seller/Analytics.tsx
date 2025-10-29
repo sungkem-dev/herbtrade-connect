@@ -1,91 +1,125 @@
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { Card, CardContent } from "@/components/ui/card";
-import { TrendingUp, DollarSign, ShoppingBag, Users } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { TrendingUp, Package, DollarSign, ShoppingCart } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-const SellerAnalytics = () => {
-  const analyticsData = [
-    { title: 'Total Revenue', value: '161.2K', growth: '+12%', icon: DollarSign, color: 'text-success' },
-    { title: 'Total Orders', value: '2,453', growth: '+8%', icon: ShoppingBag, color: 'text-primary' },
-    { title: 'Total Products', value: '48', growth: '+5%', icon: TrendingUp, color: 'text-accent' },
-    { title: 'Total Customers', value: '1,205', growth: '+15%', icon: Users, color: 'text-secondary' }
+const Analytics = () => {
+  const stats = [
+    {
+      title: "Total Revenue",
+      value: "$48,100",
+      change: "+20.1%",
+      icon: DollarSign,
+    },
+    {
+      title: "Total Orders",
+      value: "2,350",
+      change: "+12.5%",
+      icon: ShoppingCart,
+    },
+    {
+      title: "Products Sold",
+      value: "3,462",
+      change: "+18.2%",
+      icon: Package,
+    },
+    {
+      title: "Growth Rate",
+      value: "23.5%",
+      change: "+5.2%",
+      icon: TrendingUp,
+    },
   ];
 
-  const chartData = [
-    { label: 'Jan', value: 250 },
-    { label: 'Feb', value: 400 },
-    { label: 'Mar', value: 600 },
-    { label: 'Apr', value: 800 },
-    { label: 'May', value: 750 },
-    { label: 'Jun', value: 900 }
+  // Revenue data for the chart (January to June)
+  const revenueData = [
+    { month: 'Jan', revenue: 5200 },
+    { month: 'Feb', revenue: 6800 },
+    { month: 'Mar', revenue: 7500 },
+    { month: 'Apr', revenue: 8900 },
+    { month: 'May', revenue: 9200 },
+    { month: 'Jun', revenue: 10500 },
   ];
 
-  const maxValue = Math.max(...chartData.map(d => d.value));
+  const totalRevenue = revenueData.reduce((sum, item) => sum + item.revenue, 0);
 
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
 
       <div className="flex-1 container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold mb-2">Business Analytics</h1>
-        <p className="text-muted-foreground mb-8">Your analytics for your business</p>
+        <div className="animate-fade-in">
+          <h1 className="text-4xl font-bold mb-2">Business Analytics</h1>
+          <p className="text-muted-foreground mb-8">Your analytics for your business</p>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {analyticsData.map((item) => {
-            const Icon = item.icon;
-            return (
-              <Card key={item.title} className="card-hover">
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className={`p-3 rounded-full bg-muted ${item.color}`}>
-                      <Icon className="h-6 w-6" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {stats.map((stat) => {
+              const Icon = stat.icon;
+              return (
+                <Card key={stat.title} className="hover-scale">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10">
+                        <Icon className="h-6 w-6 text-primary" />
+                      </div>
+                      <span className="text-sm font-semibold text-success">{stat.change}</span>
                     </div>
-                    <span className="text-sm font-medium text-success">{item.growth}</span>
-                  </div>
-                  <h3 className="text-sm text-muted-foreground mb-1">{item.title}</h3>
-                  <p className="text-3xl font-bold">{item.value}</p>
-                  <p className="text-xs text-muted-foreground mt-2">from last month</p>
-                </CardContent>
-              </Card>
-            );
-          })}
+                    <h3 className="text-sm text-muted-foreground mb-2">{stat.title}</h3>
+                    <p className="text-3xl font-bold">{stat.value}</p>
+                    <p className="text-xs text-muted-foreground mt-2">from last month</p>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+
+          {/* Revenue Chart */}
+          <Card className="mt-8">
+            <CardHeader>
+              <CardTitle>Revenue Over Time</CardTitle>
+              <CardDescription>
+                Monthly revenue from January to June
+                <div className="mt-2 text-2xl font-bold text-primary">
+                  Total: ${totalRevenue.toLocaleString()}
+                </div>
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[400px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={revenueData}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis 
+                      dataKey="month" 
+                      className="text-sm"
+                    />
+                    <YAxis 
+                      className="text-sm"
+                      tickFormatter={(value) => `$${value}`}
+                    />
+                    <Tooltip 
+                      formatter={(value: number) => [`$${value}`, 'Revenue']}
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="revenue" 
+                      stroke="hsl(var(--primary))" 
+                      strokeWidth={3}
+                      dot={{ fill: 'hsl(var(--primary))', r: 5 }}
+                      activeDot={{ r: 7 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-
-        {/* Chart */}
-        <Card>
-          <CardContent className="pt-6">
-            <h2 className="text-2xl font-bold mb-6">Revenue Overview</h2>
-            
-            <div className="relative h-[400px] border rounded-lg p-8">
-              {/* Y-axis labels */}
-              <div className="absolute left-0 top-0 bottom-0 flex flex-col justify-between text-sm text-muted-foreground py-8">
-                <span>1000</span>
-                <span>750</span>
-                <span>500</span>
-                <span>250</span>
-                <span>0</span>
-              </div>
-
-              {/* Chart bars */}
-              <div className="flex items-end justify-around h-full ml-12">
-                {chartData.map((item, index) => {
-                  const heightPercent = (item.value / maxValue) * 100;
-                  return (
-                    <div key={index} className="flex flex-col items-center flex-1 mx-2">
-                      <div 
-                        className="w-full bg-primary rounded-t-lg transition-all hover:bg-primary/80 cursor-pointer"
-                        style={{ height: `${heightPercent}%` }}
-                        title={`${item.label}: ${item.value}`}
-                      />
-                      <span className="text-sm text-muted-foreground mt-2">{item.label}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       <Footer />
@@ -93,4 +127,4 @@ const SellerAnalytics = () => {
   );
 };
 
-export default SellerAnalytics;
+export default Analytics;
