@@ -1,6 +1,8 @@
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Leaf, Shield, Globe, TrendingUp } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 const About = () => {
   return (
@@ -92,6 +94,62 @@ const About = () => {
                 <h3 className="text-xl font-semibold mb-3">Transparency</h3>
                 <p className="text-muted-foreground">Blockchain-powered tracking</p>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Testimonials Section */}
+        <section className="py-16 px-4 md:px-8">
+          <div className="container mx-auto">
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-primary">
+              Apa Kata Mereka
+            </h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {/* Testimonial 1 */}
+              <Card className="animate-fade-in hover:shadow-lg transition-all duration-300">
+                <CardContent className="pt-6 text-center">
+                  <Avatar className="w-20 h-20 mx-auto mb-4">
+                    <AvatarImage src="https://randomuser.me/api/portraits/men/1.jpg" alt="Rizky Pratama" />
+                    <AvatarFallback>RP</AvatarFallback>
+                  </Avatar>
+                  <h3 className="text-xl font-semibold mb-1">Rizky Pratama</h3>
+                  <p className="text-sm text-muted-foreground mb-4">Herbal Buyer</p>
+                  <p className="text-muted-foreground leading-relaxed">
+                    "Produk herbalnya sangat berkualitas, pengiriman cepat, dan pelayanan ramah! HerBlocX benar-benar memudahkan proses pembelian bahan baku herbal untuk bisnis saya."
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Testimonial 2 */}
+              <Card className="animate-fade-in hover:shadow-lg transition-all duration-300">
+                <CardContent className="pt-6 text-center">
+                  <Avatar className="w-20 h-20 mx-auto mb-4">
+                    <AvatarImage src="https://randomuser.me/api/portraits/women/2.jpg" alt="Siti Aisyah" />
+                    <AvatarFallback>SA</AvatarFallback>
+                  </Avatar>
+                  <h3 className="text-xl font-semibold mb-1">Siti Aisyah</h3>
+                  <p className="text-sm text-muted-foreground mb-4">Supplier</p>
+                  <p className="text-muted-foreground leading-relaxed">
+                    "Sebagai supplier, HerBlocX memberikan platform yang sangat transparan dan terpercaya. Saya bisa menjangkau pembeli dari berbagai negara dengan mudah!"
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Testimonial 3 */}
+              <Card className="animate-fade-in hover:shadow-lg transition-all duration-300">
+                <CardContent className="pt-6 text-center">
+                  <Avatar className="w-20 h-20 mx-auto mb-4">
+                    <AvatarImage src="https://randomuser.me/api/portraits/men/3.jpg" alt="Budi Santoso" />
+                    <AvatarFallback>BS</AvatarFallback>
+                  </Avatar>
+                  <h3 className="text-xl font-semibold mb-1">Budi Santoso</h3>
+                  <p className="text-sm text-muted-foreground mb-4">Customer</p>
+                  <p className="text-muted-foreground leading-relaxed">
+                    "Pengalaman berbelanja di HerBlocX luar biasa! Semua produk tersertifikasi dan tracking pengiriman sangat akurat. Highly recommended!"
+                  </p>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </section>
