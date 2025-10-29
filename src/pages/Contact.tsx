@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Mail, Phone, MapPin, Send } from "lucide-react";
+import { Mail, Phone, MapPin, Send, Instagram, MessageCircle, Twitter, Linkedin, Facebook } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 
@@ -167,6 +167,71 @@ const Contact = () => {
                 </Card>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Social Media Section */}
+        <section className="py-16 px-4 bg-muted/30">
+          <div className="container mx-auto text-center">
+            <h2 className="text-2xl font-bold text-primary mb-6 animate-fade-in">
+              Connect With Us
+            </h2>
+            
+            <div className="flex justify-center gap-4 mb-6 animate-fade-in">
+              <a
+                href="https://instagram.com/herblocx"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary text-white hover:bg-primary/80 transition-all duration-300 hover:scale-110"
+                aria-label="Instagram"
+              >
+                <Instagram className="h-5 w-5" />
+              </a>
+              
+              <a
+                href="https://wa.me/628123456789"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary text-white hover:bg-primary/80 transition-all duration-300 hover:scale-110"
+                aria-label="WhatsApp"
+              >
+                <MessageCircle className="h-5 w-5" />
+              </a>
+              
+              <a
+                href="https://twitter.com/herblocx"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary text-white hover:bg-primary/80 transition-all duration-300 hover:scale-110"
+                aria-label="Twitter"
+              >
+                <Twitter className="h-5 w-5" />
+              </a>
+              
+              <a
+                href="https://linkedin.com/company/herblocx"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary text-white hover:bg-primary/80 transition-all duration-300 hover:scale-110"
+                aria-label="LinkedIn"
+              >
+                <Linkedin className="h-5 w-5" />
+              </a>
+              
+              <a
+                href="https://facebook.com/herblocx"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary text-white hover:bg-primary/80 transition-all duration-300 hover:scale-110"
+                aria-label="Facebook"
+              >
+                <Facebook className="h-5 w-5" />
+              </a>
+            </div>
+            
+            <p className="text-muted-foreground animate-fade-in">
+              Ikuti kami untuk update dan informasi seputar herbal 🌿
+            </p>
           </div>
         </section>
       </main>
