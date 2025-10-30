@@ -13,6 +13,8 @@ import Product from "./pages/Product";
 import Cart from "./pages/Cart";
 import Tracking from "./pages/Tracking";
 import BuyerDashboard from "./pages/buyer/Dashboard";
+import BuyerRequests from "./pages/buyer/Requests";
+import BuyerOrders from "./pages/buyer/Orders";
 import SellerProducts from "./pages/seller/Products";
 import AddProduct from "./pages/seller/AddProduct";
 import SellerOrders from "./pages/seller/Orders";
@@ -39,8 +41,8 @@ const App = () => (
           <Route path="/cart" element={<Cart />} />
           <Route path="/tracking" element={<Tracking />} />
           <Route path="/buyer/dashboard" element={<BuyerDashboard />} />
-          <Route path="/buyer/requests" element={<BuyerDashboard />} />
-          <Route path="/buyer/orders" element={<BuyerDashboard />} />
+          <Route path="/buyer/requests" element={<BuyerRequests />} />
+          <Route path="/buyer/orders" element={<BuyerOrders />} />
           <Route path="/seller/products" element={<SellerProducts />} />
           <Route path="/seller/add-product" element={<AddProduct />} />
           <Route path="/seller/orders" element={<SellerOrders />} />
