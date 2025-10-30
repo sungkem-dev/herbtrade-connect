@@ -34,7 +34,7 @@ const Contact = () => {
         {/* Hero Section */}
         <section className="py-20 hero-gradient text-primary-foreground">
           <div className="container mx-auto px-4 text-center">
-            <h1 className="text-5xl font-bold mb-6 animate-fade-in">Contact Us</h1>
+            <h1 className="text-5xl font-bold text-primary-foreground mb-6 animate-fade-in">Contact Us</h1>
             <p className="text-xl max-w-2xl mx-auto animate-slide-up">
               Get in touch with our team. We're here to help!
             </p>

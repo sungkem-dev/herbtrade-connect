@@ -56,7 +56,7 @@ const Login = () => {
       <Card className="w-full max-w-md shadow-lg rounded-xl animate-fade-in">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <Leaf className="h-12 w-12 text-primary" />
+            <img src="/icon.png" alt="HerBlocX logo" className="h-12 w-12 object-contain" />
           </div>
           <CardTitle className="text-3xl font-bold">Welcome to HerBlocX</CardTitle>
           <CardDescription>Log in to your account to start trading</CardDescription>

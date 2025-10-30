@@ -4,6 +4,7 @@ import { Leaf, Shield, Globe, TrendingUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
+
 const About = () => {
   return (
     <div className="min-h-screen flex flex-col">
@@ -13,7 +14,7 @@ const About = () => {
         {/* Hero Section */}
         <section className="py-20 hero-gradient text-primary-foreground">
           <div className="container mx-auto px-4 text-center">
-            <h1 className="text-5xl font-bold mb-6 animate-fade-in">About HerBlocX</h1>
+            <h1 className="text-5xl font-bold text-primary-foreground mb-6 animate-fade-in">About HerBlocX</h1>
             <p className="text-xl max-w-2xl mx-auto animate-slide-up">
               Indonesia's Leading Digital Herbal Marketplace
             </p>

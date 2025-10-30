@@ -69,7 +69,7 @@ const Register = () => {
       <Card className="w-full max-w-md animate-fade-in">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <Leaf className="h-12 w-12 text-primary" />
+            <img src="/icon.png" alt="HerBlocX logo" className="h-12 w-12 object-contain"/>
           </div>
           <CardTitle className="text-3xl font-bold">Create Account</CardTitle>
           <CardDescription>Join HerBlocX and start trading herbal products</CardDescription>

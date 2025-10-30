@@ -12,14 +12,14 @@ const mockRequests = [
     productName: "Jahe Merah Premium",
     quantity: "50 kg",
     status: "pending",
-    requestDate: "2025-01-15",
+    requestDate: "2025-02-15",
   },
   {
     id: 2,
     productName: "Kunyit Organik",
     quantity: "30 kg",
     status: "approved",
-    requestDate: "2025-01-14",
+    requestDate: "2025-03-14",
   },
   {
     id: 3,
@@ -33,7 +33,7 @@ const mockRequests = [
     productName: "Lengkuas Segar",
     quantity: "40 kg",
     status: "pending",
-    requestDate: "2025-01-12",
+    requestDate: "2025-11-12",
   },
 ];
 
