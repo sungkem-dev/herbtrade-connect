@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, Wallet, LogOut, User } from "lucide-react";
@@ -15,6 +15,7 @@ export const Web3Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const user = authService.getUser();
 
   useEffect(() => {
@@ -30,10 +31,22 @@ export const Web3Header = () => {
     navigate("/");
   };
 
+  const scrollToSection = (sectionId: string) => {
+    if (location.pathname !== "/") {
+      navigate("/", { state: { scrollTo: sectionId } });
+    } else {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+    setIsOpen(false);
+  };
+
   const navLinks = [
-    { href: "/shop", label: "Marketplace" },
-    { href: "/about", label: "About" },
-    { href: "/contact", label: "Contact" },
+    { href: "/shop", label: "Marketplace", isScroll: false },
+    { id: "about", label: "About", isScroll: true },
+    { id: "contact", label: "Contact", isScroll: true },
   ];
 
   return (
@@ -54,15 +67,25 @@ export const Web3Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                to={link.href}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {link.label}
-              </Link>
-            ))}
+            {navLinks.map((link) =>
+              link.isScroll ? (
+                <button
+                  key={link.id}
+                  onClick={() => scrollToSection(link.id!)}
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {link.label}
+                </button>
+              ) : (
+                <Link
+                  key={link.href}
+                  to={link.href!}
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {link.label}
+                </Link>
+              )
+            )}
           </nav>
 
           {/* Actions */}
@@ -115,16 +138,26 @@ export const Web3Header = () => {
             </SheetTrigger>
             <SheetContent side="right" className="glass w-[300px]">
               <nav className="flex flex-col gap-4 mt-8">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    to={link.href}
-                    onClick={() => setIsOpen(false)}
-                    className="text-lg hover:text-primary transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
+                {navLinks.map((link) =>
+                  link.isScroll ? (
+                    <button
+                      key={link.id}
+                      onClick={() => scrollToSection(link.id!)}
+                      className="text-lg hover:text-primary transition-colors text-left"
+                    >
+                      {link.label}
+                    </button>
+                  ) : (
+                    <Link
+                      key={link.href}
+                      to={link.href!}
+                      onClick={() => setIsOpen(false)}
+                      className="text-lg hover:text-primary transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  )
+                )}
                 <div className="border-t border-border pt-4 mt-4">
                   {user ? (
                     <>

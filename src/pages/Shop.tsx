@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
+import { Web3Header } from "@/components/Web3Header";
+import { Web3Footer } from "@/components/Web3Footer";
+import { Web3Background } from "@/components/Web3Background";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -26,10 +27,11 @@ const Shop = () => {
   });
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
+    <div className="min-h-screen flex flex-col gradient-bg relative overflow-hidden">
+      <Web3Background />
+      <Web3Header />
 
-      <div className="flex-1 container mx-auto px-4 py-8">
+      <div className="flex-1 container mx-auto px-4 py-8 pt-24 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar Filters */}
           <aside className="lg:col-span-1">
@@ -159,7 +161,7 @@ const Shop = () => {
         </div>
       </div>
 
-      <Footer />
+      <Web3Footer />
     </div>
   );
 };
