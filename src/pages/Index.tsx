@@ -1,135 +1,376 @@
+import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
-import { Shield, CheckCircle, Globe, Award } from "lucide-react";
-import heroImage from "@/assets/hero-herbal.jpg";
+import { Web3Header } from "@/components/Web3Header";
+import { Web3Footer } from "@/components/Web3Footer";
+import { Web3Background } from "@/components/Web3Background";
+import {
+  ArrowRight,
+  Shield,
+  Globe,
+  Zap,
+  Lock,
+  Database,
+  Layers,
+  CheckCircle,
+  Leaf,
+  Award,
+} from "lucide-react";
 
 const Index = () => {
+  const sectionsRef = useRef<HTMLDivElement[]>([]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    sectionsRef.current.forEach((section) => {
+      if (section) observer.observe(section);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  const addToRefs = (el: HTMLDivElement) => {
+    if (el && !sectionsRef.current.includes(el)) {
+      sectionsRef.current.push(el);
+    }
+  };
+
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
+    <div className="min-h-screen gradient-bg relative overflow-hidden">
+      <Web3Background />
+      <Web3Header />
 
       {/* Hero Section */}
-      <section className="relative h-[600px] flex items-center justify-center overflow-hidden">
-        <div 
-          className="absolute inset-0 z-0"
-          style={{
-            backgroundImage: `linear-gradient(rgba(9, 78, 7, 0.7), rgba(9, 78, 7, 0.7)), url(${heroImage})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center'
-          }}
-        />
-        <div className="container mx-auto px-4 z-10 text-center text-white">
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 animate-fade-in text-primary-foreground">
-            Simplify Your Herbal Export with HerBlocX
+      <section className="relative min-h-screen flex items-center justify-center pt-20">
+        <div className="container mx-auto px-4 text-center relative z-10">
+          <div
+            ref={addToRefs}
+            className="animate-on-scroll"
+            style={{ animationDelay: "0.1s" }}
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/30 bg-primary/10 mb-8">
+              <Leaf className="h-4 w-4 text-primary" />
+              <span className="text-sm text-primary">Web3 Herbal Marketplace</span>
+            </div>
+          </div>
+
+          <h1
+            ref={addToRefs}
+            className="animate-on-scroll text-5xl md:text-7xl lg:text-8xl font-bold mb-6 leading-tight"
+            style={{ animationDelay: "0.2s" }}
+          >
+            <span className="text-gradient-hero">Revolutionizing</span>
+            <br />
+            <span className="text-foreground">Herbal Trade</span>
           </h1>
-          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto animate-slide-up">
-            Connect with verified global suppliers and buyers. Trade with confidence using blockchain transparency.
+
+          <p
+            ref={addToRefs}
+            className="animate-on-scroll text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10"
+            style={{ animationDelay: "0.3s" }}
+          >
+            Connect with verified global suppliers and buyers. Trade with confidence
+            using blockchain transparency and smart contracts.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+
+          <div
+            ref={addToRefs}
+            className="animate-on-scroll flex flex-col sm:flex-row gap-4 justify-center"
+            style={{ animationDelay: "0.4s" }}
+          >
             <Link to="/login">
-              <Button size="lg" className="btn-hero text-lg px-8 py-6">
-                Claim Your Access Now!
+              <Button className="btn-web3 text-lg gap-2">
+                Launch App
+                <ArrowRight className="h-5 w-5" />
               </Button>
             </Link>
             <Link to="/shop">
-              <Button size="lg" variant="outline" className="text-lg px-8 py-6 bg-white/10 backdrop-blur border-white text-white hover:bg-white/20">
-                Browse Products
+              <Button className="btn-web3-outline text-lg">
+                Explore Marketplace
               </Button>
             </Link>
           </div>
+
+          {/* Stats */}
+          <div
+            ref={addToRefs}
+            className="animate-on-scroll grid grid-cols-2 md:grid-cols-4 gap-6 mt-20 max-w-4xl mx-auto"
+            style={{ animationDelay: "0.5s" }}
+          >
+            {[
+              { value: "$2.5M+", label: "Total Volume" },
+              { value: "1,200+", label: "Active Traders" },
+              { value: "50+", label: "Countries" },
+              { value: "99.9%", label: "Uptime" },
+            ].map((stat) => (
+              <div key={stat.label} className="text-center">
+                <p className="text-3xl md:text-4xl font-bold text-gradient-hero">
+                  {stat.value}
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">{stat.label}</p>
+              </div>
+            ))}
+          </div>
         </div>
-      </section>
 
-      {/* Features Section */}
-      <section className="py-20 bg-card">
-        <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-bold text-center mb-12">Why Choose HerBlocX?</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="card-hover border-2">
-              <CardContent className="pt-6">
-                <Shield className="h-12 w-12 text-primary mb-4" />
-                <h3 className="text-xl font-semibold mb-3">Verified Quality</h3>
-                <p className="text-muted-foreground">
-                  All products undergo rigorous quality checks and certification validation.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="card-hover border-2">
-              <CardContent className="pt-6">
-                <CheckCircle className="h-12 w-12 text-accent mb-4" />
-                <h3 className="text-xl font-semibold mb-3">Blockchain Transparency</h3>
-                <p className="text-muted-foreground">
-                  Track every transaction with immutable blockchain records for complete trust.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="card-hover border-2">
-              <CardContent className="pt-6">
-                <Globe className="h-12 w-12 text-secondary mb-4" />
-                <h3 className="text-xl font-semibold mb-3">Global Network</h3>
-                <p className="text-muted-foreground">
-                  Connect with verified suppliers and buyers from around the world.
-                </p>
-              </CardContent>
-            </Card>
+        {/* Scroll indicator */}
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce">
+          <div className="w-6 h-10 rounded-full border-2 border-muted-foreground/30 flex items-start justify-center p-1">
+            <div className="w-1.5 h-2.5 bg-primary rounded-full animate-pulse" />
           </div>
         </div>
       </section>
 
-      {/* Compliance Section */}
-      <section className="py-20 bg-muted">
+      {/* About Section */}
+      <section className="py-32 relative">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <Award className="h-16 w-16 text-primary mx-auto mb-4" />
-            <h2 className="text-4xl font-bold mb-4">Certified & Compliant</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              We ensure all products meet international standards and regulations
+          <div
+            ref={addToRefs}
+            className="animate-on-scroll text-center mb-16"
+          >
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">
+              About <span className="text-gradient-hero">HerBlocX</span>
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
+              Indonesia's leading digital herbal marketplace powered by blockchain technology
             </p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
-            {['GMP', 'CPOTB', 'BPOM', 'FDA', 'Halal'].map((cert) => (
-              <Card key={cert} className="text-center p-6 card-hover">
-                <Award className="h-10 w-10 text-accent mx-auto mb-2" />
-                <p className="font-semibold">{cert}</p>
-                <p className="text-xs text-muted-foreground">Certified</p>
+          <div
+            ref={addToRefs}
+            className="animate-on-scroll glass-card p-8 md:p-12 max-w-4xl mx-auto"
+          >
+            <p className="text-lg text-muted-foreground leading-relaxed mb-6">
+              HerBlocX is revolutionizing the herbal trade industry by combining
+              traditional Indonesian herbal expertise with cutting-edge blockchain
+              technology. Our platform ensures transparent, secure, and efficient
+              trading for suppliers and buyers worldwide.
+            </p>
+            <p className="text-lg text-muted-foreground leading-relaxed">
+              With smart contracts and immutable records, every transaction is
+              verified, every product is authenticated, and every participant is
+              protected.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Blockchain Features */}
+      <section className="py-32 relative">
+        <div className="container mx-auto px-4">
+          <div
+            ref={addToRefs}
+            className="animate-on-scroll text-center mb-16"
+          >
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">
+              Blockchain <span className="text-gradient-hero">Features</span>
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
+              Powered by decentralized technology for maximum security and transparency
+            </p>
+          </div>
+
+          <div
+            ref={addToRefs}
+            className="animate-on-scroll grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          >
+            {[
+              {
+                icon: Shield,
+                title: "Smart Contracts",
+                description:
+                  "Automated, trustless transactions executed on-chain with complete transparency.",
+              },
+              {
+                icon: Database,
+                title: "Immutable Records",
+                description:
+                  "Every transaction is permanently recorded on the blockchain for full audit trail.",
+              },
+              {
+                icon: Lock,
+                title: "Secure Escrow",
+                description:
+                  "Funds are protected in smart contract escrow until delivery is confirmed.",
+              },
+              {
+                icon: Zap,
+                title: "Instant Settlement",
+                description:
+                  "Fast, low-cost transactions with near-instant finality and settlement.",
+              },
+              {
+                icon: Globe,
+                title: "Global Access",
+                description:
+                  "Trade with verified partners anywhere in the world without intermediaries.",
+              },
+              {
+                icon: Layers,
+                title: "Multi-Chain Support",
+                description:
+                  "Connect your preferred wallet and transact across multiple networks.",
+              },
+            ].map((feature) => (
+              <Card
+                key={feature.title}
+                className="glass-card border-border/50 card-hover"
+              >
+                <CardContent className="pt-6">
+                  <div className="p-3 bg-primary/10 rounded-xl w-fit mb-4 glow-primary">
+                    <feature.icon className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
+                  <p className="text-muted-foreground">{feature.description}</p>
+                </CardContent>
               </Card>
             ))}
           </div>
+        </div>
+      </section>
 
-          <div className="mt-12 text-center">
-            <ul className="inline-flex flex-wrap justify-center gap-4 text-sm text-muted-foreground">
-              <li>✓ GMP Certified</li>
-              <li>✓ CPOTB Compliant</li>
-              <li>✓ BPOM & FDA Export Approved</li>
-              <li>✓ Phytosanitary Certification</li>
-              <li>✓ Halal & Organic Certified</li>
-            </ul>
+      {/* Ecosystem */}
+      <section className="py-32 relative">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div ref={addToRefs} className="animate-on-scroll">
+              <h2 className="text-4xl md:text-5xl font-bold mb-6">
+                Complete <span className="text-gradient-hero">Ecosystem</span>
+              </h2>
+              <p className="text-lg text-muted-foreground mb-8">
+                From sourcing to delivery, HerBlocX provides a complete solution
+                for the herbal trade industry.
+              </p>
+
+              <div className="space-y-4">
+                {[
+                  "Verified supplier network across Indonesia",
+                  "Quality certification and product authentication",
+                  "Real-time tracking and logistics integration",
+                  "Secure payment processing with multiple options",
+                  "Regulatory compliance and export documentation",
+                ].map((item, index) => (
+                  <div key={index} className="flex items-center gap-3">
+                    <CheckCircle className="h-5 w-5 text-primary shrink-0" />
+                    <p className="text-muted-foreground">{item}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div
+              ref={addToRefs}
+              className="animate-on-scroll grid grid-cols-2 gap-4"
+            >
+              {[
+                { label: "Suppliers", value: "500+" },
+                { label: "Products", value: "2,000+" },
+                { label: "Transactions", value: "10,000+" },
+                { label: "Certifications", value: "15+" },
+              ].map((stat) => (
+                <Card
+                  key={stat.label}
+                  className="glass-card border-border/50 text-center p-6"
+                >
+                  <p className="text-3xl font-bold text-gradient-hero mb-1">
+                    {stat.value}
+                  </p>
+                  <p className="text-sm text-muted-foreground">{stat.label}</p>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Security Section */}
+      <section className="py-32 relative">
+        <div className="container mx-auto px-4">
+          <div
+            ref={addToRefs}
+            className="animate-on-scroll text-center mb-16"
+          >
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">
+              Security & <span className="text-gradient-hero">Transparency</span>
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
+              Enterprise-grade security with complete transparency
+            </p>
+          </div>
+
+          <div
+            ref={addToRefs}
+            className="animate-on-scroll glass-card p-8 md:p-12 max-w-4xl mx-auto"
+          >
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-6 mb-8">
+              {["GMP", "CPOTB", "BPOM", "FDA", "Halal"].map((cert) => (
+                <div key={cert} className="text-center">
+                  <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center glow-primary">
+                    <Award className="h-8 w-8 text-primary" />
+                  </div>
+                  <p className="font-semibold">{cert}</p>
+                  <p className="text-xs text-muted-foreground">Certified</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap justify-center gap-4 text-sm text-muted-foreground">
+              {[
+                "GMP Certified",
+                "CPOTB Compliant",
+                "BPOM & FDA Export Approved",
+                "Phytosanitary Certification",
+                "Halal & Organic Certified",
+              ].map((item) => (
+                <div key={item} className="flex items-center gap-1">
+                  <CheckCircle className="h-4 w-4 text-primary" />
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 hero-gradient text-white">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl font-bold mb-6 text-primary-foreground">Ready to Start Trading?</h2>
-          <p className="text-xl mb-8 max-w-2xl mx-auto">
-            Join thousands of verified buyers and sellers in the global herbal trade marketplace
-          </p>
-          <Link to="/login">
-            <Button size="lg" className="bg-white text-primary hover:bg-white/90 text-lg px-8 py-6">
-              Get Started Today
-            </Button>
-          </Link>
+      <section className="py-32 relative">
+        <div className="container mx-auto px-4">
+          <div
+            ref={addToRefs}
+            className="animate-on-scroll glass-card p-12 md:p-20 text-center relative overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-secondary/10" />
+            <div className="relative z-10">
+              <h2 className="text-4xl md:text-5xl font-bold mb-6">
+                Ready to Join the <span className="text-gradient-hero">Future</span>?
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-8">
+                Start trading on the most advanced herbal marketplace today.
+                Connect your wallet and explore the ecosystem.
+              </p>
+              <Link to="/login">
+                <Button className="btn-web3 text-lg gap-2">
+                  Get Started Now
+                  <ArrowRight className="h-5 w-5" />
+                </Button>
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
 
-      <Footer />
+      <Web3Footer />
     </div>
   );
 };
