@@ -1,63 +1,66 @@
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
-import { Card, CardContent } from "@/components/ui/card";
+import { Web3Header } from "@/components/Web3Header";
+import { Web3Footer } from "@/components/Web3Footer";
+import { Web3Background } from "@/components/Web3Background";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Package } from "lucide-react";
+import { ArrowRightLeft, CheckCircle, Clock, AlertCircle, Package } from "lucide-react";
 
 const mockOrders = [
   {
-    id: "ORD-001",
+    id: "0x8f4e...3a2b",
     productName: "Jahe Merah Premium",
     date: "2025-01-10",
-    price: "$ 9.99",
+    price: "125.50 USDT",
     status: "delivered",
+    from: "0x7a3f...9c1d",
+    to: "0x2b8e...4f6a",
   },
   {
-    id: "ORD-002",
+    id: "0x2c7a...8d1f",
     productName: "Kunyit Organik",
     date: "2025-01-08",
-    price: "$ 40",
+    price: "89.00 USDC",
     status: "shipped",
+    from: "0x4e2c...7b3a",
+    to: "0x9f1a...2d8c",
   },
   {
-    id: "ORD-003",
+    id: "0x5b9d...1e4a",
     productName: "Temulawak Kering",
     date: "2025-01-05",
-    price: "$ 62,5",
+    price: "210.75 USDT",
     status: "processing",
+    from: "0x3a8f...6c2e",
+    to: "0x1d7b...5a9f",
   },
   {
-    id: "ORD-004",
+    id: "0x9e3c...7f2b",
     productName: "Lengkuas Segar",
     date: "2025-01-03",
-    price: "$ 5",
+    price: "67.25 USDC",
     status: "delivered",
+    from: "0x6b4d...2e8a",
+    to: "0x8c1f...3b7d",
   },
   {
-    id: "ORD-005",
+    id: "0x1a7f...4c9e",
     productName: "Kencur Premium",
     date: "2024-12-28",
-    price: "$ 3.5",
+    price: "156.00 USDT",
     status: "delivered",
+    from: "0x5e2b...9a4c",
+    to: "0x7d3f...1c6e",
   },
 ];
 
 const getStatusColor = (status: string) => {
   switch (status) {
     case "delivered":
-      return "bg-green-500/10 text-green-600 hover:bg-green-500/20";
+      return "status-success";
     case "shipped":
-      return "bg-blue-500/10 text-blue-600 hover:bg-blue-500/20";
+      return "bg-blue-500/20 text-blue-400 border-blue-500/30";
     case "processing":
-      return "bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20";
+      return "status-pending";
     default:
       return "bg-muted text-muted-foreground";
   }
@@ -65,113 +68,81 @@ const getStatusColor = (status: string) => {
 
 const BuyerOrders = () => {
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
+    <div className="min-h-screen flex flex-col gradient-bg relative overflow-hidden">
+      <Web3Background />
+      <Web3Header />
 
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Order History</h1>
+      <main className="flex-1 container mx-auto px-4 py-8 pt-24 relative z-10">
+        <div className="mb-8 animate-fade-in">
+          <h1 className="text-4xl font-bold mb-2 text-gradient-hero">Order History</h1>
           <p className="text-muted-foreground text-lg">
-            Track and review your past orders
+            Track and review your blockchain-verified transactions
           </p>
         </div>
 
         {mockOrders.length > 0 ? (
-          <>
-            {/* Desktop Table View */}
-            <Card className="hidden md:block animate-fade-in">
-              <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Order ID</TableHead>
-                      <TableHead>Product Name</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Price</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {mockOrders.map((order) => (
-                      <TableRow
-                        key={order.id}
-                        className="hover:bg-muted/50 transition-colors cursor-pointer"
-                      >
-                        <TableCell className="font-medium">{order.id}</TableCell>
-                        <TableCell>{order.productName}</TableCell>
-                        <TableCell>
-                          {new Date(order.date).toLocaleDateString("id-ID", {
-                            day: "numeric",
-                            month: "long",
-                            year: "numeric",
-                          })}
-                        </TableCell>
-                        <TableCell className="font-semibold">{order.price}</TableCell>
-                        <TableCell>
-                          <Badge className={getStatusColor(order.status)}>
-                            {order.status}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-
-            {/* Mobile Card View */}
-            <div className="md:hidden space-y-4">
+          <Card className="glass-card border-border/50 animate-fade-in">
+            <CardHeader className="flex flex-row items-center gap-3 pb-4">
+              <div className="p-2 bg-primary/20 rounded-lg glow-primary">
+                <ArrowRightLeft className="h-5 w-5 text-primary" />
+              </div>
+              <CardTitle className="text-lg">Transaction History</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
               {mockOrders.map((order, index) => (
-                <Card
+                <div
                   key={order.id}
-                  className="hover:shadow-lg transition-all duration-300 animate-fade-in cursor-pointer"
+                  className="flex flex-col md:flex-row md:items-center justify-between p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors animate-fade-in"
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
-                  <CardContent className="pt-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">
-                          Order ID
-                        </p>
-                        <p className="font-semibold">{order.id}</p>
-                      </div>
-                      <Badge className={getStatusColor(order.status)}>
+                  <div className="flex items-center gap-3 mb-3 md:mb-0">
+                    <div className="p-2 bg-primary/10 rounded">
+                      <ArrowRightLeft className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-mono text-sm text-primary">{order.id}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {order.from} → {order.to}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-6">
+                    <div>
+                      <p className="text-sm font-medium">{order.productName}</p>
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {new Date(order.date).toLocaleDateString("id-ID", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </p>
+                    </div>
+                    
+                    <div className="text-right flex flex-row md:flex-col items-center md:items-end gap-2">
+                      <p className="text-sm font-semibold text-primary">{order.price}</p>
+                      <Badge
+                        variant="outline"
+                        className={getStatusColor(order.status)}
+                      >
+                        {order.status === "delivered" ? (
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                        ) : order.status === "shipped" ? (
+                          <Package className="h-3 w-3 mr-1" />
+                        ) : (
+                          <AlertCircle className="h-3 w-3 mr-1" />
+                        )}
                         {order.status}
                       </Badge>
                     </div>
-
-                    <div className="space-y-3">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Product</p>
-                        <p className="font-medium">{order.productName}</p>
-                      </div>
-
-                      <div className="flex justify-between">
-                        <div>
-                          <p className="text-sm text-muted-foreground">Date</p>
-                          <p className="text-sm">
-                            {new Date(order.date).toLocaleDateString("id-ID", {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                            })}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm text-muted-foreground">Price</p>
-                          <p className="font-semibold text-primary">
-                            {order.price}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               ))}
-            </div>
-          </>
+            </CardContent>
+          </Card>
         ) : (
-          <Card>
+          <Card className="glass-card border-border/50">
             <CardContent className="py-12 text-center">
               <Package className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
               <h3 className="text-lg font-semibold mb-2">No Orders Yet</h3>
@@ -183,7 +154,7 @@ const BuyerOrders = () => {
         )}
       </main>
 
-      <Footer />
+      <Web3Footer />
     </div>
   );
 };

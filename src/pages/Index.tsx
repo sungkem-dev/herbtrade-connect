@@ -155,8 +155,12 @@ const Index = () => {
               { value: "1,200+", label: "Active Traders" },
               { value: "50+", label: "Countries" },
               { value: "99.9%", label: "Uptime" },
-            ].map((stat) => (
-              <div key={stat.label} className="text-center">
+            ].map((stat, index) => (
+              <div 
+                key={stat.label} 
+                className="text-center animate-fade-in"
+                style={{ animationDelay: `${0.6 + index * 0.1}s` }}
+              >
                 <p className="text-3xl md:text-4xl font-bold text-gradient-hero">
                   {stat.value}
                 </p>
@@ -215,11 +219,13 @@ const Index = () => {
             </div>
 
             <div className="animate-scale-in">
-              <img 
-                src="/hero-herbal.jpg" 
-                alt="Herbal products illustration" 
-                className="rounded-2xl shadow-2xl w-full h-auto object-cover"
-              />
+              <div className="relative p-2 rounded-2xl glass-card border border-primary/30 glow-primary">
+                <img 
+                  src="/hero-herbal.jpg" 
+                  alt="Herbal products illustration" 
+                  className="rounded-xl w-full h-auto object-cover"
+                />
+              </div>
             </div>
           </div>
 
