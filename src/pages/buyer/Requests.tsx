@@ -1,5 +1,6 @@
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
+import { Web3Header } from "@/components/Web3Header";
+import { Web3Footer } from "@/components/Web3Footer";
+import { Web3Background } from "@/components/Web3Background";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -40,11 +41,11 @@ const mockRequests = [
 const getStatusColor = (status: string) => {
   switch (status) {
     case "approved":
-      return "bg-green-500/10 text-green-600 hover:bg-green-500/20";
+      return "status-success";
     case "processing":
-      return "bg-blue-500/10 text-blue-600 hover:bg-blue-500/20";
+      return "status-pending";
     case "pending":
-      return "bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20";
+      return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
     default:
       return "bg-muted text-muted-foreground";
   }
@@ -52,12 +53,13 @@ const getStatusColor = (status: string) => {
 
 const BuyerRequests = () => {
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
+    <div className="min-h-screen flex flex-col gradient-bg relative overflow-hidden">
+      <Web3Background />
+      <Web3Header />
 
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Buyer Requests</h1>
+      <main className="flex-1 container mx-auto px-4 py-8 pt-24 relative z-10">
+        <div className="mb-8 animate-fade-in">
+          <h1 className="text-4xl font-bold mb-2 text-gradient-hero">Buyer Requests</h1>
           <p className="text-muted-foreground text-lg">
             Manage your purchase requests for herbal products
           </p>
@@ -68,15 +70,15 @@ const BuyerRequests = () => {
             {mockRequests.map((request, index) => (
               <Card
                 key={request.id}
-                className="hover:shadow-lg transition-all duration-300 animate-fade-in"
+                className="glass-card border-border/50 card-hover animate-fade-in"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <CardContent className="pt-6">
                   <div className="flex items-start justify-between mb-4">
-                    <div className="p-3 bg-primary/10 rounded-lg">
+                    <div className="p-3 bg-primary/20 rounded-lg glow-primary">
                       <Package className="h-6 w-6 text-primary" />
                     </div>
-                    <Badge className={getStatusColor(request.status)}>
+                    <Badge variant="outline" className={getStatusColor(request.status)}>
                       {request.status}
                     </Badge>
                   </div>
@@ -100,7 +102,7 @@ const BuyerRequests = () => {
                     </p>
                   </div>
 
-                  <Button className="w-full" variant="outline">
+                  <Button className="w-full btn-web3-outline">
                     View Detail
                   </Button>
                 </CardContent>
@@ -108,7 +110,7 @@ const BuyerRequests = () => {
             ))}
           </div>
         ) : (
-          <Card>
+          <Card className="glass-card border-border/50">
             <CardContent className="py-12 text-center">
               <Package className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
               <h3 className="text-lg font-semibold mb-2">No Requests Yet</h3>
@@ -116,14 +118,14 @@ const BuyerRequests = () => {
                 You haven't made any purchase requests yet.
               </p>
               <Link to="/shop">
-                <Button>Browse Products</Button>
+                <Button className="btn-web3">Browse Products</Button>
               </Link>
             </CardContent>
           </Card>
         )}
       </main>
 
-      <Footer />
+      <Web3Footer />
     </div>
   );
 };

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
+import { Web3Header } from "@/components/Web3Header";
+import { Web3Footer } from "@/components/Web3Footer";
+import { Web3Background } from "@/components/Web3Background";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Package, BarChart3, DollarSign, ShoppingBag } from "lucide-react";
@@ -10,19 +11,20 @@ const SellerProducts = () => {
   const user = authService.getUser();
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
+    <div className="min-h-screen flex flex-col gradient-bg relative overflow-hidden">
+      <Web3Background />
+      <Web3Header />
 
-      <div className="flex-1 container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
+      <div className="flex-1 container mx-auto px-4 py-8 pt-24 relative z-10">
+        <div className="flex justify-between items-center mb-8 animate-fade-in">
           <div>
-            <h1 className="text-4xl font-bold mb-2">Welcome Back, {user?.name}!</h1>
+            <h1 className="text-4xl font-bold mb-2 text-gradient-hero">Welcome Back, {user?.name}!</h1>
             <p className="text-muted-foreground text-lg">
               Manage your products and track your business performance
             </p>
           </div>
           <Link to="/seller/add-product">
-            <Button size="lg" className="btn-hero">
+            <Button size="lg" className="btn-web3">
               <Plus className="mr-2 h-5 w-5" />
               Add Product
             </Button>
@@ -30,78 +32,48 @@ const SellerProducts = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Link to="/seller/products">
-            <Card className="card-hover cursor-pointer border-2 border-primary">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Products</p>
-                    <p className="text-3xl font-bold">12</p>
+          {[
+            { to: "/seller/products", icon: Package, label: "Products", value: "12", active: true },
+            { to: "/seller/orders", icon: ShoppingBag, label: "Orders", value: "48", active: false },
+            { to: "/seller/analytics", icon: BarChart3, label: "Analytics", value: "View", active: false },
+            { to: "/seller/withdraw", icon: DollarSign, label: "Revenue", value: "$12.4K", active: false },
+          ].map((item, index) => (
+            <Link key={item.to} to={item.to}>
+              <Card 
+                className={`glass-card border-border/50 card-hover cursor-pointer animate-fade-in ${item.active ? 'border-primary/50 glow-primary' : ''}`}
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">{item.label}</p>
+                      <p className="text-3xl font-bold">{item.value}</p>
+                    </div>
+                    <div className={`p-3 rounded-lg ${item.active ? 'bg-primary/20' : 'bg-muted/50'}`}>
+                      <item.icon className={`h-8 w-8 ${item.active ? 'text-primary' : 'text-muted-foreground'}`} />
+                    </div>
                   </div>
-                  <Package className="h-12 w-12 text-primary" />
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link to="/seller/orders">
-            <Card className="card-hover cursor-pointer">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Orders</p>
-                    <p className="text-3xl font-bold">48</p>
-                  </div>
-                  <ShoppingBag className="h-12 w-12 text-accent" />
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link to="/seller/analytics">
-            <Card className="card-hover cursor-pointer">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Analytics</p>
-                    <p className="text-3xl font-bold">View</p>
-                  </div>
-                  <BarChart3 className="h-12 w-12 text-secondary" />
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link to="/seller/withdraw">
-            <Card className="card-hover cursor-pointer">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Revenue</p>
-                    <p className="text-3xl font-bold">$12.4K</p>
-                  </div>
-                  <DollarSign className="h-12 w-12 text-success" />
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
         </div>
 
-        <Card>
+        <Card className="glass-card border-border/50 animate-fade-in" style={{ animationDelay: "0.4s" }}>
           <CardContent className="pt-6">
             <h2 className="text-2xl font-bold mb-6">Your Products</h2>
             <div className="text-center py-12 text-muted-foreground">
               <Package className="h-16 w-16 mx-auto mb-4 opacity-50" />
               <p className="mb-4">No products yet</p>
               <Link to="/seller/add-product">
-                <Button>Add Your First Product</Button>
+                <Button className="btn-web3">Add Your First Product</Button>
               </Link>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Footer />
+      <Web3Footer />
     </div>
   );
 };

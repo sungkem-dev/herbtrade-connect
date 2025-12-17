@@ -30,12 +30,14 @@ const generateMockBlocks = (): Block[] => {
   }));
 };
 
+const stablecoins = ["USDT", "USDC"];
+
 const generateMockTransactions = (): Transaction[] => {
   return Array.from({ length: 5 }, () => ({
     hash: `0x${Math.random().toString(16).slice(2, 10)}...${Math.random().toString(16).slice(2, 6)}`,
     from: `0x${Math.random().toString(16).slice(2, 8)}...${Math.random().toString(16).slice(2, 6)}`,
     to: `0x${Math.random().toString(16).slice(2, 8)}...${Math.random().toString(16).slice(2, 6)}`,
-    value: (Math.random() * 10).toFixed(4) + " ETH",
+    value: (Math.random() * 500 + 50).toFixed(2) + " " + stablecoins[Math.floor(Math.random() * stablecoins.length)],
     status: Math.random() > 0.2 ? "success" : "pending",
   }));
 };

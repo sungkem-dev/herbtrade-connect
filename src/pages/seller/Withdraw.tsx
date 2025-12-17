@@ -1,12 +1,14 @@
 import { useState } from "react";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
-import { Card, CardContent } from "@/components/ui/card";
+import { Web3Header } from "@/components/Web3Header";
+import { Web3Footer } from "@/components/Web3Footer";
+import { Web3Background } from "@/components/Web3Background";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { ArrowRightLeft, Wallet } from "lucide-react";
 
 interface WithdrawOrder {
   id: string;
@@ -19,16 +21,16 @@ interface WithdrawOrder {
 }
 
 const withdrawData: WithdrawOrder[] = [
-  { id: '#20462', product: 'Jahe', customer: 'Matt Dickerson', date: '13/05/2022', amount: '$90', total: '$60987', status: 'Delivered' },
-  { id: '#18933', product: 'Kunyit', customer: 'Wiktoria', date: '22/05/2022', amount: '$150', total: '$45678', status: 'Delivered' },
-  { id: '#45169', product: 'Jahe', customer: 'Trixia Raya', date: '15/06/2022', amount: '$200', total: '$38450', status: 'Process' },
-  { id: '#34304', product: 'Kayu Manis', customer: 'Jamie Morrison', date: '08/05/2022', amount: '$80', total: '$52341', status: 'Delivered' },
-  { id: '#17188', product: 'Lada Hitam', customer: 'Robert Levy', date: '30/04/2022', amount: '$120', total: '$25479', status: 'Canceled' },
-  { id: '#73003', product: 'Pala', customer: 'Noel Baldwin', date: '15/04/2022', amount: '$95', total: '$48230', status: 'Delivered' },
-  { id: '#58825', product: 'Jahe', customer: 'Zaire Saris', date: '22/03/2022', amount: '$110', total: '$39876', status: 'Delivered' },
-  { id: '#44122', product: 'Kunyit', customer: 'Michael Jenkins', date: '03/03/2022', amount: '$75', total: '$55432', status: 'Delivered' },
-  { id: '#89094', product: 'Kayu Manis', customer: 'Tyler Moran', date: '01/02/2022', amount: '$140', total: '$42198', status: 'Delivered' },
-  { id: '#76147', product: 'Lada Hitam', customer: 'Liam Melon', date: '19/01/2022', amount: '$160', total: '$37654', status: 'Delivered' }
+  { id: '0x8f4e...3a2b', product: 'Jahe', customer: 'Matt Dickerson', date: '13/05/2022', amount: '90 USDT', total: '60,987 USDT', status: 'Delivered' },
+  { id: '0x2c7a...8d1f', product: 'Kunyit', customer: 'Wiktoria', date: '22/05/2022', amount: '150 USDC', total: '45,678 USDC', status: 'Delivered' },
+  { id: '0x5b9d...1e4a', product: 'Jahe', customer: 'Trixia Raya', date: '15/06/2022', amount: '200 USDT', total: '38,450 USDT', status: 'Process' },
+  { id: '0x9e3c...7f2b', product: 'Kayu Manis', customer: 'Jamie Morrison', date: '08/05/2022', amount: '80 USDC', total: '52,341 USDC', status: 'Delivered' },
+  { id: '0x1a7f...4c9e', product: 'Lada Hitam', customer: 'Robert Levy', date: '30/04/2022', amount: '120 USDT', total: '25,479 USDT', status: 'Canceled' },
+  { id: '0x3d8b...2f5c', product: 'Pala', customer: 'Noel Baldwin', date: '15/04/2022', amount: '95 USDC', total: '48,230 USDC', status: 'Delivered' },
+  { id: '0x6e2a...9c4d', product: 'Jahe', customer: 'Zaire Saris', date: '22/03/2022', amount: '110 USDT', total: '39,876 USDT', status: 'Delivered' },
+  { id: '0x7f1c...3a8e', product: 'Kunyit', customer: 'Michael Jenkins', date: '03/03/2022', amount: '75 USDC', total: '55,432 USDC', status: 'Delivered' },
+  { id: '0x4b9e...1d7f', product: 'Kayu Manis', customer: 'Tyler Moran', date: '01/02/2022', amount: '140 USDT', total: '42,198 USDT', status: 'Delivered' },
+  { id: '0x2c8d...5a6b', product: 'Lada Hitam', customer: 'Liam Melon', date: '19/01/2022', amount: '160 USDC', total: '37,654 USDC', status: 'Delivered' }
 ];
 
 const SellerWithdraw = () => {
@@ -46,11 +48,11 @@ const SellerWithdraw = () => {
   const getStatusColor = (status: WithdrawOrder['status']) => {
     switch (status) {
       case 'Delivered':
-        return 'bg-success text-white';
+        return 'status-success';
       case 'Canceled':
-        return 'bg-destructive text-white';
+        return 'bg-red-500/20 text-red-400 border-red-500/30';
       case 'Process':
-        return 'bg-warning text-white';
+        return 'status-pending';
     }
   };
 
@@ -61,20 +63,29 @@ const SellerWithdraw = () => {
   );
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
+    <div className="min-h-screen flex flex-col gradient-bg relative overflow-hidden">
+      <Web3Background />
+      <Web3Header />
 
-      <div className="flex-1 container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold mb-2">Withdraw</h1>
-        <p className="text-muted-foreground mb-8">Manage your withdrawals and refunds</p>
+      <div className="flex-1 container mx-auto px-4 py-8 pt-24 relative z-10">
+        <div className="animate-fade-in mb-8">
+          <h1 className="text-4xl font-bold mb-2 text-gradient-hero">Withdraw</h1>
+          <p className="text-muted-foreground">Manage your withdrawals and refunds</p>
+        </div>
 
-        <Card>
-          <CardContent className="pt-6">
+        <Card className="glass-card border-border/50 animate-fade-in" style={{ animationDelay: "0.1s" }}>
+          <CardHeader className="flex flex-row items-center gap-3 pb-4">
+            <div className="p-2 bg-primary/20 rounded-lg glow-primary">
+              <Wallet className="h-5 w-5 text-primary" />
+            </div>
+            <CardTitle className="text-lg">Withdrawal Records</CardTitle>
+          </CardHeader>
+          <CardContent>
             <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">Show</span>
                 <Select value={entriesPerPage} onValueChange={setEntriesPerPage}>
-                  <SelectTrigger className="w-[100px]">
+                  <SelectTrigger className="w-[100px] bg-muted/30 border-border/50">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -87,38 +98,42 @@ const SellerWithdraw = () => {
               </div>
 
               <Input
-                placeholder="Search..."
+                placeholder="Search transactions..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="md:w-[300px]"
+                className="md:w-[300px] bg-muted/30 border-border/50"
               />
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-3 px-4 font-semibold">Tracking ID</th>
-                    <th className="text-left py-3 px-4 font-semibold">Product</th>
-                    <th className="text-left py-3 px-4 font-semibold">Customer</th>
-                    <th className="text-left py-3 px-4 font-semibold">Date</th>
-                    <th className="text-left py-3 px-4 font-semibold">Amount</th>
-                    <th className="text-left py-3 px-4 font-semibold">Total</th>
-                    <th className="text-left py-3 px-4 font-semibold">Status</th>
-                    <th className="text-left py-3 px-4 font-semibold">Action</th>
+                  <tr className="border-b border-border/50">
+                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">TX Hash</th>
+                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Product</th>
+                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Customer</th>
+                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Date</th>
+                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Amount</th>
+                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Total</th>
+                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Status</th>
+                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredOrders.map((order) => (
-                    <tr key={order.id} className="border-b hover:bg-muted/50">
-                      <td className="py-3 px-4 font-medium">{order.id}</td>
+                  {filteredOrders.map((order, index) => (
+                    <tr 
+                      key={order.id} 
+                      className="border-b border-border/30 hover:bg-muted/30 transition-colors animate-fade-in"
+                      style={{ animationDelay: `${0.2 + index * 0.05}s` }}
+                    >
+                      <td className="py-3 px-4 font-mono text-sm text-primary">{order.id}</td>
                       <td className="py-3 px-4">{order.product}</td>
                       <td className="py-3 px-4">{order.customer}</td>
-                      <td className="py-3 px-4">{order.date}</td>
+                      <td className="py-3 px-4 text-muted-foreground">{order.date}</td>
                       <td className="py-3 px-4 font-semibold">{order.amount}</td>
                       <td className="py-3 px-4 font-bold text-primary">{order.total}</td>
                       <td className="py-3 px-4">
-                        <Badge className={getStatusColor(order.status)}>
+                        <Badge variant="outline" className={getStatusColor(order.status)}>
                           {order.status}
                         </Badge>
                       </td>
@@ -126,7 +141,7 @@ const SellerWithdraw = () => {
                         {order.status === 'Delivered' && (
                           <Button 
                             size="sm" 
-                            className="btn-hero"
+                            className="btn-web3"
                             onClick={() => handleWithdraw(order.id)}
                           >
                             Withdraw
@@ -137,6 +152,7 @@ const SellerWithdraw = () => {
                             size="sm" 
                             variant="outline"
                             onClick={() => handleRefund(order.id)}
+                            className="border-border/50 bg-muted/30"
                           >
                             Refund
                           </Button>
@@ -156,18 +172,18 @@ const SellerWithdraw = () => {
                 Showing 1 to {filteredOrders.length} of {withdrawData.length} entries
               </p>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm">Previous</Button>
+                <Button variant="outline" size="sm" className="border-border/50 bg-muted/30">Previous</Button>
                 <Button variant="outline" size="sm" className="bg-primary text-primary-foreground">1</Button>
-                <Button variant="outline" size="sm">2</Button>
-                <Button variant="outline" size="sm">3</Button>
-                <Button variant="outline" size="sm">Next</Button>
+                <Button variant="outline" size="sm" className="border-border/50 bg-muted/30">2</Button>
+                <Button variant="outline" size="sm" className="border-border/50 bg-muted/30">3</Button>
+                <Button variant="outline" size="sm" className="border-border/50 bg-muted/30">Next</Button>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Footer />
+      <Web3Footer />
     </div>
   );
 };
