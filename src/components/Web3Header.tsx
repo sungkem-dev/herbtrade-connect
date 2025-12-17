@@ -2,12 +2,15 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, Wallet, LogOut, User } from "lucide-react";
+import { Menu, Wallet, LogOut, User, Copy, ExternalLink } from "lucide-react";
 import { authService } from "@/lib/auth";
+import { useWallet } from "@/hooks/useWallet";
+import { toast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
@@ -17,6 +20,7 @@ export const Web3Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const user = authService.getUser();
+  const { address, isConnected, isConnecting, connectWallet, disconnectWallet, shortenAddress } = useWallet();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -41,6 +45,22 @@ export const Web3Header = () => {
       }
     }
     setIsOpen(false);
+  };
+
+  const copyAddress = () => {
+    if (address) {
+      navigator.clipboard.writeText(address);
+      toast({
+        title: "Address Copied",
+        description: "Wallet address copied to clipboard.",
+      });
+    }
+  };
+
+  const viewOnExplorer = () => {
+    if (address) {
+      window.open(`https://etherscan.io/address/${address}`, "_blank");
+    }
   };
 
   const navLinks = [
@@ -113,19 +133,50 @@ export const Web3Header = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <>
-                <Link to="/login">
-                  <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
-                    Login
-                  </Button>
-                </Link>
-                <Link to="/login">
+              <Link to="/login">
+                <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
+                  Login
+                </Button>
+              </Link>
+            )}
+
+            {/* Wallet Connection */}
+            {isConnected && address ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
                   <Button className="btn-web3 gap-2 py-2 px-4">
-                    <Wallet className="h-4 w-4" />
-                    Connect Wallet
+                    <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
+                    {shortenAddress(address)}
                   </Button>
-                </Link>
-              </>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="glass min-w-[200px]">
+                  <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                    Connected Wallet
+                  </div>
+                  <DropdownMenuItem onClick={copyAddress}>
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copy Address
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={viewOnExplorer}>
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    View on Etherscan
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={disconnectWallet} className="text-destructive">
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Disconnect
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button 
+                className="btn-web3 gap-2 py-2 px-4" 
+                onClick={connectWallet}
+                disabled={isConnecting}
+              >
+                <Wallet className="h-4 w-4" />
+                {isConnecting ? "Connecting..." : "Connect Wallet"}
+              </Button>
             )}
           </div>
 
@@ -168,18 +219,43 @@ export const Web3Header = () => {
                       >
                         Dashboard
                       </Link>
-                      <Button onClick={handleLogout} variant="destructive" className="w-full">
+                      <Button onClick={handleLogout} variant="destructive" className="w-full mb-4">
                         <LogOut className="h-4 w-4 mr-2" />
                         Logout
                       </Button>
                     </>
                   ) : (
-                    <Link to="/login" onClick={() => setIsOpen(false)}>
-                      <Button className="btn-web3 w-full gap-2">
-                        <Wallet className="h-4 w-4" />
-                        Connect Wallet
+                    <Link to="/login" onClick={() => setIsOpen(false)} className="block mb-4">
+                      <Button variant="outline" className="w-full">
+                        Login
                       </Button>
                     </Link>
+                  )}
+                  
+                  {/* Mobile Wallet */}
+                  {isConnected && address ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 p-2 rounded-lg bg-primary/10 border border-primary/20">
+                        <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
+                        <span className="text-sm font-mono">{shortenAddress(address)}</span>
+                      </div>
+                      <Button 
+                        onClick={disconnectWallet} 
+                        variant="outline" 
+                        className="w-full text-destructive"
+                      >
+                        Disconnect Wallet
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button 
+                      className="btn-web3 w-full gap-2" 
+                      onClick={connectWallet}
+                      disabled={isConnecting}
+                    >
+                      <Wallet className="h-4 w-4" />
+                      {isConnecting ? "Connecting..." : "Connect Wallet"}
+                    </Button>
                   )}
                 </div>
               </nav>
