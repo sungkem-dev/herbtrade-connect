@@ -6,6 +6,14 @@ interface WalletState {
   isConnected: boolean;
   isConnecting: boolean;
   chainId: string | null;
+  ethBalance: string | null;
+  tokenBalances: TokenBalance[];
+}
+
+interface TokenBalance {
+  symbol: string;
+  balance: string;
+  name: string;
 }
 
 declare global {
@@ -21,17 +29,48 @@ declare global {
 
 const WALLET_KEY = "herblocx_wallet";
 
+// Mock token balances for demonstration
+const mockTokenBalances: TokenBalance[] = [
+  { symbol: "USDT", balance: "1,250.00", name: "Tether USD" },
+  { symbol: "USDC", balance: "850.50", name: "USD Coin" },
+  { symbol: "HERB", balance: "5,000.00", name: "HerBlocX Token" },
+];
+
 export const useWallet = () => {
   const [wallet, setWallet] = useState<WalletState>({
     address: null,
     isConnected: false,
     isConnecting: false,
     chainId: null,
+    ethBalance: null,
+    tokenBalances: [],
   });
 
   const shortenAddress = (address: string) => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
+
+  const fetchBalance = useCallback(async (address: string) => {
+    if (!window.ethereum) return;
+
+    try {
+      const balance = await window.ethereum.request({
+        method: "eth_getBalance",
+        params: [address, "latest"],
+      }) as string;
+
+      // Convert from Wei to ETH
+      const ethBalance = (parseInt(balance, 16) / 1e18).toFixed(4);
+      
+      setWallet((prev) => ({
+        ...prev,
+        ethBalance,
+        tokenBalances: mockTokenBalances,
+      }));
+    } catch (error) {
+      console.error("Error fetching balance:", error);
+    }
+  }, []);
 
   const checkIfWalletIsConnected = useCallback(async () => {
     if (!window.ethereum) return;
@@ -41,18 +80,20 @@ export const useWallet = () => {
       const chainId = await window.ethereum.request({ method: "eth_chainId" }) as string;
 
       if (accounts.length > 0) {
-        setWallet({
+        setWallet((prev) => ({
+          ...prev,
           address: accounts[0],
           isConnected: true,
           isConnecting: false,
           chainId,
-        });
+        }));
         localStorage.setItem(WALLET_KEY, accounts[0]);
+        fetchBalance(accounts[0]);
       }
     } catch (error) {
       console.error("Error checking wallet connection:", error);
     }
-  }, []);
+  }, [fetchBalance]);
 
   const connectWallet = async () => {
     if (!window.ethereum) {
@@ -74,13 +115,15 @@ export const useWallet = () => {
       const chainId = await window.ethereum.request({ method: "eth_chainId" }) as string;
 
       if (accounts.length > 0) {
-        setWallet({
+        setWallet((prev) => ({
+          ...prev,
           address: accounts[0],
           isConnected: true,
           isConnecting: false,
           chainId,
-        });
+        }));
         localStorage.setItem(WALLET_KEY, accounts[0]);
+        fetchBalance(accounts[0]);
         
         toast({
           title: "Wallet Connected",
@@ -113,6 +156,8 @@ export const useWallet = () => {
       isConnected: false,
       isConnecting: false,
       chainId: null,
+      ethBalance: null,
+      tokenBalances: [],
     });
     localStorage.removeItem(WALLET_KEY);
     
@@ -137,11 +182,15 @@ export const useWallet = () => {
             isConnected: true,
           }));
           localStorage.setItem(WALLET_KEY, accs[0]);
+          fetchBalance(accs[0]);
         }
       };
 
       const handleChainChanged = (chainId: unknown) => {
         setWallet((prev) => ({ ...prev, chainId: chainId as string }));
+        if (wallet.address) {
+          fetchBalance(wallet.address);
+        }
       };
 
       window.ethereum.on("accountsChanged", handleAccountsChanged);
@@ -152,7 +201,7 @@ export const useWallet = () => {
         window.ethereum?.removeListener("chainChanged", handleChainChanged);
       };
     }
-  }, [checkIfWalletIsConnected]);
+  }, [checkIfWalletIsConnected, fetchBalance, wallet.address]);
 
   return {
     ...wallet,
