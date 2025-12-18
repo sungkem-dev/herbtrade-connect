@@ -10,10 +10,16 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { products, categories } from "@/lib/products";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, TrendingUp, TrendingDown, Coins, Clock, BarChart3, Verified } from "lucide-react";
+
+// Mock price data for blockchain display
+const generateMockPriceChange = () => {
+  const change = (Math.random() * 10 - 3).toFixed(2);
+  return parseFloat(change);
+};
 
 const Shop = () => {
-  const [priceRange, setPriceRange] = useState([0, 30]);
+  const [priceRange, setPriceRange] = useState([0, 500]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [showInStock, setShowInStock] = useState(false);
   const [showOnSale, setShowOnSale] = useState(false);
@@ -26,36 +32,90 @@ const Shop = () => {
     return priceMatch && categoryMatch && stockMatch && saleMatch;
   });
 
+  // Generate mock blockchain data for each product
+  const productsWithBlockchainData = filteredProducts.map(product => ({
+    ...product,
+    priceChange: generateMockPriceChange(),
+    usdtPrice: product.price,
+    volume24h: Math.floor(Math.random() * 1000) + 100,
+    lastTrade: Math.floor(Math.random() * 60) + 1,
+  }));
+
   return (
     <div className="min-h-screen flex flex-col gradient-bg relative overflow-hidden">
       <Web3Background />
       <Web3Header />
 
       <div className="flex-1 container mx-auto px-4 py-8 pt-24 relative z-10">
+        {/* Market Stats Header */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <Card className="glass-card border-border/50">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
+                <BarChart3 className="h-4 w-4" />
+                Total Volume
+              </div>
+              <p className="text-xl font-bold">$124,500 <span className="text-xs text-primary">USDT</span></p>
+            </CardContent>
+          </Card>
+          <Card className="glass-card border-border/50">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
+                <Coins className="h-4 w-4" />
+                Listed Items
+              </div>
+              <p className="text-xl font-bold">{products.length} <span className="text-xs text-muted-foreground">Products</span></p>
+            </CardContent>
+          </Card>
+          <Card className="glass-card border-border/50">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
+                <TrendingUp className="h-4 w-4 text-green-500" />
+                24h Change
+              </div>
+              <p className="text-xl font-bold text-green-500">+5.24%</p>
+            </CardContent>
+          </Card>
+          <Card className="glass-card border-border/50">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
+                <Clock className="h-4 w-4" />
+                Last Updated
+              </div>
+              <p className="text-xl font-bold">2m ago</p>
+            </CardContent>
+          </Card>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar Filters */}
           <aside className="lg:col-span-1">
-            <Card>
+            <Card className="glass-card border-border/50">
               <CardContent className="pt-6 space-y-6">
                 <div>
-                  <h3 className="font-semibold mb-4">Price Filter</h3>
+                  <h3 className="font-semibold mb-4 flex items-center gap-2">
+                    <Coins className="h-4 w-4 text-primary" />
+                    Price Filter (USDT)
+                  </h3>
                   <div className="space-y-4">
                     <Slider
                       value={priceRange}
                       onValueChange={setPriceRange}
-                      max={30}
-                      step={1}
+                      max={500}
+                      step={10}
                       className="w-full"
                     />
-                    <div className="flex justify-between text-sm text-muted-foreground">
-                      <span>${priceRange[0]}</span>
-                      <span>${priceRange[1]}</span>
+                    <div className="flex justify-between text-sm">
+                      <span className="font-mono text-primary">{priceRange[0]} USDT</span>
+                      <span className="font-mono text-primary">{priceRange[1]} USDT</span>
                     </div>
-                    <Button variant="outline" className="w-full">Filter</Button>
+                    <Button variant="outline" className="w-full glass border-border/50 hover:bg-primary/10">
+                      Apply Filter
+                    </Button>
                   </div>
                 </div>
 
-                <div>
+                <div className="border-t border-border/50 pt-6">
                   <h3 className="font-semibold mb-4">Product Categories</h3>
                   <div className="space-y-3">
                     {categories.map(category => (
@@ -79,7 +139,7 @@ const Shop = () => {
                   </div>
                 </div>
 
-                <div>
+                <div className="border-t border-border/50 pt-6">
                   <h3 className="font-semibold mb-4">Product Status</h3>
                   <div className="space-y-3">
                     <div className="flex items-center space-x-2">
@@ -111,46 +171,104 @@ const Shop = () => {
           {/* Products Grid */}
           <div className="lg:col-span-3">
             <div className="flex justify-between items-center mb-6">
-              <p className="text-muted-foreground">{filteredProducts.length} Items</p>
+              <p className="text-muted-foreground">
+                <span className="text-foreground font-semibold">{filteredProducts.length}</span> Items Listed
+              </p>
               <Select defaultValue="latest">
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-[180px] glass border-border/50">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="latest">Sort by latest</SelectItem>
+                <SelectContent className="glass">
+                  <SelectItem value="latest">Latest Listed</SelectItem>
                   <SelectItem value="price-low">Price: Low to High</SelectItem>
                   <SelectItem value="price-high">Price: High to Low</SelectItem>
-                  <SelectItem value="name">Name: A to Z</SelectItem>
+                  <SelectItem value="volume">Highest Volume</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredProducts.map(product => (
-                <Card key={product.id} className="card-hover">
-                  <CardContent className="pt-6">
-                    <div className="aspect-square bg-muted rounded-lg mb-4 flex items-center justify-center">
-                      <img src={product.image} alt={product.name} className="w-full h-full object-cover rounded-lg" />
-                    </div>
-                    <div className="space-y-2">
-                      <h3 className="font-semibold text-lg">{product.name}</h3>
-                      <p className="text-sm text-muted-foreground italic">{product.scientificName}</p>
-                      <p className="text-xs text-muted-foreground">{product.location}</p>
-                      <div className="flex items-center justify-between">
-                        <span className="text-2xl font-bold text-primary">${product.price}</span>
-                        {product.onSale && (
-                          <span className="text-xs bg-accent text-accent-foreground px-2 py-1 rounded">
-                            On Sale
-                          </span>
+              {productsWithBlockchainData.map((product, index) => (
+                <Card 
+                  key={product.id} 
+                  className="glass-card border-border/50 card-hover animate-fade-in overflow-hidden"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <CardContent className="pt-0 px-0">
+                    {/* Image with overlay */}
+                    <div className="relative aspect-square bg-muted/50 flex items-center justify-center">
+                      <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                      
+                      {/* Price change badge */}
+                      <div className={`absolute top-3 right-3 px-2 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 ${
+                        product.priceChange >= 0 
+                          ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                          : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                      }`}>
+                        {product.priceChange >= 0 ? (
+                          <TrendingUp className="h-3 w-3" />
+                        ) : (
+                          <TrendingDown className="h-3 w-3" />
                         )}
+                        {product.priceChange >= 0 ? '+' : ''}{product.priceChange}%
                       </div>
+
+                      {/* Verified badge */}
+                      {product.inStock && (
+                        <div className="absolute top-3 left-3 px-2 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 bg-primary/20 text-primary border border-primary/30">
+                          <Verified className="h-3 w-3" />
+                          Verified
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Product Info */}
+                    <div className="p-4 space-y-3">
+                      <div>
+                        <h3 className="font-semibold text-lg">{product.name}</h3>
+                        <p className="text-sm text-muted-foreground italic">{product.scientificName}</p>
+                      </div>
+
+                      {/* Blockchain Price Display */}
+                      <div className="glass p-3 rounded-lg border border-border/50">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs text-muted-foreground">Current Price</span>
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {product.lastTrade}m ago
+                          </span>
+                        </div>
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-2xl font-bold text-primary font-mono">
+                            {product.usdtPrice.toFixed(2)}
+                          </span>
+                          <span className="text-sm text-primary">USDT</span>
+                        </div>
+                        <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/50">
+                          <span className="text-xs text-muted-foreground">24h Vol</span>
+                          <span className="text-xs font-mono">{product.volume24h} USDT</span>
+                        </div>
+                      </div>
+
+                      {/* Location */}
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        📍 {product.location}
+                      </p>
+
+                      {product.onSale && (
+                        <div className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-accent/20 text-accent border border-accent/30">
+                          🔥 Hot Deal
+                        </div>
+                      )}
                     </div>
                   </CardContent>
-                  <CardFooter className="gap-2">
+                  <CardFooter className="gap-2 px-4 pb-4">
                     <Link to={`/product/${product.id}`} className="flex-1">
-                      <Button variant="outline" className="w-full">View Details</Button>
+                      <Button variant="outline" className="w-full glass border-border/50 hover:bg-primary/10">
+                        View Details
+                      </Button>
                     </Link>
-                    <Button size="icon" className="btn-hero">
+                    <Button size="icon" className="btn-web3">
                       <ShoppingCart className="h-4 w-4" />
                     </Button>
                   </CardFooter>
