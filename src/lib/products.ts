@@ -19,6 +19,15 @@ export interface Product {
     casNo: string;
   };
   cultivationArea: string;
+  supplier: {
+    id: string;
+    name: string;
+    location: string;
+    rating: number;
+    totalSales: number;
+    stock: number;
+    verified: boolean;
+  };
 }
 
 export const products: Product[] = [
@@ -42,7 +51,16 @@ export const products: Product[] = [
       model: 'HK120095',
       casNo: '458-37-7'
     },
-    cultivationArea: 'East Java - Malang'
+    cultivationArea: 'East Java - Malang',
+    supplier: {
+      id: 'SUP001',
+      name: 'Java Herbs Co.',
+      location: 'Malang, East Java',
+      rating: 4.8,
+      totalSales: 1250,
+      stock: 5000,
+      verified: true
+    }
   },
   {
     id: 'AP001',
@@ -62,7 +80,16 @@ export const products: Product[] = [
       model: 'HK120096',
       casNo: '5508-58-7'
     },
-    cultivationArea: 'West Java - Bogor'
+    cultivationArea: 'West Java - Bogor',
+    supplier: {
+      id: 'SUP002',
+      name: 'West Java Botanics',
+      location: 'Bogor, West Java',
+      rating: 4.7,
+      totalSales: 890,
+      stock: 3200,
+      verified: true
+    }
   },
   {
     id: 'CV001',
@@ -82,7 +109,16 @@ export const products: Product[] = [
       model: 'HK120097',
       casNo: '8015-91-6'
     },
-    cultivationArea: 'Middle Java - Semarang'
+    cultivationArea: 'Middle Java - Semarang',
+    supplier: {
+      id: 'SUP003',
+      name: 'Central Java Herbs',
+      location: 'Semarang, Middle Java',
+      rating: 4.9,
+      totalSales: 1100,
+      stock: 4500,
+      verified: true
+    }
   },
   {
     id: 'PN001',
@@ -102,7 +138,16 @@ export const products: Product[] = [
       model: 'HK120098',
       casNo: '84929-31-7'
     },
-    cultivationArea: 'North Sumatra - Medan'
+    cultivationArea: 'North Sumatra - Medan',
+    supplier: {
+      id: 'SUP004',
+      name: 'Sumatra Spices',
+      location: 'Medan, North Sumatra',
+      rating: 4.6,
+      totalSales: 780,
+      stock: 2800,
+      verified: true
+    }
   },
   {
     id: 'MF001',
@@ -122,7 +167,16 @@ export const products: Product[] = [
       model: 'HK120099',
       casNo: '8008-45-5'
     },
-    cultivationArea: 'South Kalimantan - Banjarmasin'
+    cultivationArea: 'South Kalimantan - Banjarmasin',
+    supplier: {
+      id: 'SUP005',
+      name: 'Kalimantan Natural',
+      location: 'Banjarmasin, South Kalimantan',
+      rating: 4.5,
+      totalSales: 650,
+      stock: 2100,
+      verified: false
+    }
   }
 ];
 

@@ -11,6 +11,8 @@ import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { products, categories } from "@/lib/products";
 import { ShoppingCart, TrendingUp, TrendingDown, Coins, Clock, BarChart3, Verified } from "lucide-react";
+import { SearchAutocomplete } from "@/components/SearchAutocomplete";
+import { SupplierTrendGraph } from "@/components/SupplierTrendGraph";
 
 // Mock price data for blockchain display
 const generateMockPriceChange = () => {
@@ -23,13 +25,18 @@ const Shop = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [showInStock, setShowInStock] = useState(false);
   const [showOnSale, setShowOnSale] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const filteredProducts = products.filter(product => {
     const priceMatch = product.price >= priceRange[0] && product.price <= priceRange[1];
     const categoryMatch = selectedCategories.length === 0 || selectedCategories.includes(product.category);
     const stockMatch = !showInStock || product.inStock;
     const saleMatch = !showOnSale || product.onSale;
-    return priceMatch && categoryMatch && stockMatch && saleMatch;
+    const searchMatch = searchQuery === "" || 
+      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.scientificName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.location.toLowerCase().includes(searchQuery.toLowerCase());
+    return priceMatch && categoryMatch && stockMatch && saleMatch && searchMatch;
   });
 
   // Generate mock blockchain data for each product
@@ -47,6 +54,11 @@ const Shop = () => {
       <Web3Header />
 
       <div className="flex-1 container mx-auto px-4 py-8 pt-24 relative z-10">
+        {/* Search Bar */}
+        <div className="flex justify-center mb-8">
+          <SearchAutocomplete onSearch={setSearchQuery} />
+        </div>
+
         {/* Market Stats Header */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <Card className="glass-card border-border/50">
@@ -229,6 +241,15 @@ const Shop = () => {
                         <p className="text-sm text-muted-foreground italic">{product.scientificName}</p>
                       </div>
 
+                      {/* Supplier Info */}
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>by</span>
+                        <span className="text-foreground font-medium">{product.supplier.name}</span>
+                        {product.supplier.verified && (
+                          <Verified className="h-3 w-3 text-primary" />
+                        )}
+                      </div>
+
                       {/* Blockchain Price Display */}
                       <div className="glass p-3 rounded-lg border border-border/50">
                         <div className="flex items-center justify-between mb-2">
@@ -277,6 +298,9 @@ const Shop = () => {
             </div>
           </div>
         </div>
+
+        {/* Supplier Trend Graph */}
+        <SupplierTrendGraph />
       </div>
 
       <Web3Footer />
