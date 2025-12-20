@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Web3Header } from "@/components/Web3Header";
 import { Web3Footer } from "@/components/Web3Footer";
@@ -13,6 +13,7 @@ import { products, categories } from "@/lib/products";
 import { ShoppingCart, TrendingUp, TrendingDown, Coins, Clock, BarChart3, Verified } from "lucide-react";
 import { SearchAutocomplete } from "@/components/SearchAutocomplete";
 import { SupplierTrendGraph } from "@/components/SupplierTrendGraph";
+import { ProductCardSkeleton, StatCardSkeleton } from "@/components/ui/loading-spinner";
 
 // Mock price data for blockchain display
 const generateMockPriceChange = () => {
@@ -26,6 +27,15 @@ const Shop = () => {
   const [showInStock, setShowInStock] = useState(false);
   const [showOnSale, setShowOnSale] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Simulate loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
   const filteredProducts = products.filter(product => {
     const priceMatch = product.price >= priceRange[0] && product.price <= priceRange[1];
@@ -61,42 +71,53 @@ const Shop = () => {
 
         {/* Market Stats Header */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <Card className="glass-card border-border/50">
-            <CardContent className="pt-4 pb-4">
-              <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
-                <BarChart3 className="h-4 w-4" />
-                Total Volume
-              </div>
-              <p className="text-xl font-bold">$124,500 <span className="text-xs text-primary">USDT</span></p>
-            </CardContent>
-          </Card>
-          <Card className="glass-card border-border/50">
-            <CardContent className="pt-4 pb-4">
-              <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
-                <Coins className="h-4 w-4" />
-                Listed Items
-              </div>
-              <p className="text-xl font-bold">{products.length} <span className="text-xs text-muted-foreground">Products</span></p>
-            </CardContent>
-          </Card>
-          <Card className="glass-card border-border/50">
-            <CardContent className="pt-4 pb-4">
-              <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
-                <TrendingUp className="h-4 w-4 text-green-500" />
-                24h Change
-              </div>
-              <p className="text-xl font-bold text-green-500">+5.24%</p>
-            </CardContent>
-          </Card>
-          <Card className="glass-card border-border/50">
-            <CardContent className="pt-4 pb-4">
-              <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
-                <Clock className="h-4 w-4" />
-                Last Updated
-              </div>
-              <p className="text-xl font-bold">2m ago</p>
-            </CardContent>
-          </Card>
+          {isLoading ? (
+            <>
+              <StatCardSkeleton />
+              <StatCardSkeleton />
+              <StatCardSkeleton />
+              <StatCardSkeleton />
+            </>
+          ) : (
+            <>
+              <Card className="glass-card border-border/50 animate-fade-in" style={{ animationDelay: '0ms' }}>
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
+                    <BarChart3 className="h-4 w-4" />
+                    Total Volume
+                  </div>
+                  <p className="text-xl font-bold">$124,500 <span className="text-xs text-primary">USDT</span></p>
+                </CardContent>
+              </Card>
+              <Card className="glass-card border-border/50 animate-fade-in" style={{ animationDelay: '50ms' }}>
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
+                    <Coins className="h-4 w-4" />
+                    Listed Items
+                  </div>
+                  <p className="text-xl font-bold">{products.length} <span className="text-xs text-muted-foreground">Products</span></p>
+                </CardContent>
+              </Card>
+              <Card className="glass-card border-border/50 animate-fade-in" style={{ animationDelay: '100ms' }}>
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
+                    <TrendingUp className="h-4 w-4 text-green-500" />
+                    24h Change
+                  </div>
+                  <p className="text-xl font-bold text-green-500">+5.24%</p>
+                </CardContent>
+              </Card>
+              <Card className="glass-card border-border/50 animate-fade-in" style={{ animationDelay: '150ms' }}>
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
+                    <Clock className="h-4 w-4" />
+                    Last Updated
+                  </div>
+                  <p className="text-xl font-bold">2m ago</p>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -200,101 +221,112 @@ const Shop = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {productsWithBlockchainData.map((product, index) => (
-                <Card 
-                  key={product.id} 
-                  className="glass-card border-border/50 card-hover animate-fade-in overflow-hidden"
-                  style={{ animationDelay: `${index * 50}ms` }}
-                >
-                  <CardContent className="pt-0 px-0">
-                    {/* Image with overlay */}
-                    <div className="relative aspect-square bg-muted/50 flex items-center justify-center">
-                      <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
-                      
-                      {/* Price change badge */}
-                      <div className={`absolute top-3 right-3 px-2 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 ${
-                        product.priceChange >= 0 
-                          ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
-                          : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                      }`}>
-                        {product.priceChange >= 0 ? (
-                          <TrendingUp className="h-3 w-3" />
-                        ) : (
-                          <TrendingDown className="h-3 w-3" />
-                        )}
-                        {product.priceChange >= 0 ? '+' : ''}{product.priceChange}%
-                      </div>
-
-                      {/* Verified badge */}
-                      {product.inStock && (
-                        <div className="absolute top-3 left-3 px-2 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 bg-primary/20 text-primary border border-primary/30">
-                          <Verified className="h-3 w-3" />
-                          Verified
+              {isLoading ? (
+                <>
+                  <ProductCardSkeleton />
+                  <ProductCardSkeleton />
+                  <ProductCardSkeleton />
+                  <ProductCardSkeleton />
+                  <ProductCardSkeleton />
+                  <ProductCardSkeleton />
+                </>
+              ) : (
+                productsWithBlockchainData.map((product, index) => (
+                  <Card 
+                    key={product.id} 
+                    className="glass-card border-border/50 card-hover animate-fade-in overflow-hidden"
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    <CardContent className="pt-0 px-0">
+                      {/* Image with overlay */}
+                      <div className="relative aspect-square bg-muted/50 flex items-center justify-center">
+                        <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                        
+                        {/* Price change badge */}
+                        <div className={`absolute top-3 right-3 px-2 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 ${
+                          product.priceChange >= 0 
+                            ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                            : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                        }`}>
+                          {product.priceChange >= 0 ? (
+                            <TrendingUp className="h-3 w-3" />
+                          ) : (
+                            <TrendingDown className="h-3 w-3" />
+                          )}
+                          {product.priceChange >= 0 ? '+' : ''}{product.priceChange}%
                         </div>
-                      )}
-                    </div>
 
-                    {/* Product Info */}
-                    <div className="p-4 space-y-3">
-                      <div>
-                        <h3 className="font-semibold text-lg">{product.name}</h3>
-                        <p className="text-sm text-muted-foreground italic">{product.scientificName}</p>
-                      </div>
-
-                      {/* Supplier Info */}
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span>by</span>
-                        <span className="text-foreground font-medium">{product.supplier.name}</span>
-                        {product.supplier.verified && (
-                          <Verified className="h-3 w-3 text-primary" />
+                        {/* Verified badge */}
+                        {product.inStock && (
+                          <div className="absolute top-3 left-3 px-2 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 bg-primary/20 text-primary border border-primary/30">
+                            <Verified className="h-3 w-3" />
+                            Verified
+                          </div>
                         )}
                       </div>
 
-                      {/* Blockchain Price Display */}
-                      <div className="glass p-3 rounded-lg border border-border/50">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs text-muted-foreground">Current Price</span>
-                          <span className="text-xs text-muted-foreground flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {product.lastTrade}m ago
-                          </span>
+                      {/* Product Info */}
+                      <div className="p-4 space-y-3">
+                        <div>
+                          <h3 className="font-semibold text-lg">{product.name}</h3>
+                          <p className="text-sm text-muted-foreground italic">{product.scientificName}</p>
                         </div>
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-2xl font-bold text-primary font-mono">
-                            {product.usdtPrice.toFixed(2)}
-                          </span>
-                          <span className="text-sm text-primary">USDT</span>
+
+                        {/* Supplier Info */}
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <span>by</span>
+                          <span className="text-foreground font-medium">{product.supplier.name}</span>
+                          {product.supplier.verified && (
+                            <Verified className="h-3 w-3 text-primary" />
+                          )}
                         </div>
-                        <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/50">
-                          <span className="text-xs text-muted-foreground">24h Vol</span>
-                          <span className="text-xs font-mono">{product.volume24h} USDT</span>
+
+                        {/* Blockchain Price Display */}
+                        <div className="glass p-3 rounded-lg border border-border/50">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs text-muted-foreground">Current Price</span>
+                            <span className="text-xs text-muted-foreground flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {product.lastTrade}m ago
+                            </span>
+                          </div>
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-2xl font-bold text-primary font-mono">
+                              {product.usdtPrice.toFixed(2)}
+                            </span>
+                            <span className="text-sm text-primary">USDT</span>
+                          </div>
+                          <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/50">
+                            <span className="text-xs text-muted-foreground">24h Vol</span>
+                            <span className="text-xs font-mono">{product.volume24h} USDT</span>
+                          </div>
                         </div>
+
+                        {/* Location */}
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          📍 {product.location}
+                        </p>
+
+                        {product.onSale && (
+                          <div className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-accent/20 text-accent border border-accent/30">
+                            🔥 Hot Deal
+                          </div>
+                        )}
                       </div>
-
-                      {/* Location */}
-                      <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        📍 {product.location}
-                      </p>
-
-                      {product.onSale && (
-                        <div className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-accent/20 text-accent border border-accent/30">
-                          🔥 Hot Deal
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                  <CardFooter className="gap-2 px-4 pb-4">
-                    <Link to={`/product/${product.id}`} className="flex-1">
-                      <Button variant="outline" className="w-full glass border-border/50 hover:bg-primary/10">
-                        View Details
+                    </CardContent>
+                    <CardFooter className="gap-2 px-4 pb-4">
+                      <Link to={`/product/${product.id}`} className="flex-1">
+                        <Button variant="outline" className="w-full glass border-border/50 hover:bg-primary/10">
+                          View Details
+                        </Button>
+                      </Link>
+                      <Button size="icon" className="btn-web3">
+                        <ShoppingCart className="h-4 w-4" />
                       </Button>
-                    </Link>
-                    <Button size="icon" className="btn-web3">
-                      <ShoppingCart className="h-4 w-4" />
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
+                    </CardFooter>
+                  </Card>
+                ))
+              )}
             </div>
           </div>
         </div>
