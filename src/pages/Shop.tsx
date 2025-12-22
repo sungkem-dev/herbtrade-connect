@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { products, categories } from "@/lib/products";
-import { ShoppingCart, TrendingUp, TrendingDown, Coins, Clock, BarChart3, Verified } from "lucide-react";
+import { ShoppingCart, TrendingUp, TrendingDown, Coins, Clock, BarChart3, Verified, Package, Store } from "lucide-react";
+import { toast } from "sonner";
 import { SearchAutocomplete } from "@/components/SearchAutocomplete";
 import { SupplierTrendGraph } from "@/components/SupplierTrendGraph";
 import { ProductCardSkeleton, StatCardSkeleton } from "@/components/ui/loading-spinner";
@@ -277,13 +278,16 @@ const Shop = () => {
                         </div>
 
                         {/* Supplier Info */}
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Link 
+                          to={`/supplier/${product.supplier.id}`}
+                          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                        >
                           <span>by</span>
-                          <span className="text-foreground font-medium">{product.supplier.name}</span>
+                          <span className="text-foreground font-medium hover:text-primary">{product.supplier.name}</span>
                           {product.supplier.verified && (
                             <Verified className="h-3 w-3 text-primary" />
                           )}
-                        </div>
+                        </Link>
 
                         {/* Blockchain Price Display */}
                         <div className="glass p-3 rounded-lg border border-border/50">
@@ -324,7 +328,15 @@ const Shop = () => {
                           View Details
                         </Button>
                       </Link>
-                      <Button size="icon" className="btn-web3">
+                      <Link to={`/supplier/${product.supplier.id}`}>
+                        <Button variant="outline" size="icon" className="glass border-border/50 hover:bg-primary/10">
+                          <Package className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                      <Button size="icon" className="btn-web3" onClick={() => {
+                        toast.success(`Added ${product.name} to cart!`);
+                        window.location.href = '/buyer/requests';
+                      }}>
                         <ShoppingCart className="h-4 w-4" />
                       </Button>
                     </CardFooter>
@@ -337,6 +349,29 @@ const Shop = () => {
 
         {/* Supplier Trend Graph */}
         <SupplierTrendGraph />
+
+        {/* Supplier Navigation */}
+        <Card className="glass-card border-border/50 mt-8">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-primary/20 rounded-lg">
+                  <Store className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg">Explore Suppliers</h3>
+                  <p className="text-sm text-muted-foreground">View all verified suppliers and their products</p>
+                </div>
+              </div>
+              <Link to="/supplier/S001">
+                <Button className="btn-web3">
+                  <Store className="h-4 w-4 mr-2" />
+                  View Suppliers
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Web3Footer />
