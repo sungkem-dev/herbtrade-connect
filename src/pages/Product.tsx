@@ -15,6 +15,8 @@ import { toast } from "sonner";
 import { PriceChart } from "@/components/PriceChart";
 import { TransactionHistory } from "@/components/TransactionHistory";
 import { SupplierChat } from "@/components/SupplierChat";
+import { OrderPlacement } from "@/components/OrderPlacement";
+import { LivePriceDisplay } from "@/components/LivePriceTicker";
 
 const Product = () => {
   const { id } = useParams();
@@ -22,6 +24,7 @@ const Product = () => {
   const [quantity, setQuantity] = useState(1);
   const [quantityUnit, setQuantityUnit] = useState("kg");
   const [purchaseType, setPurchaseType] = useState("one-time");
+  const [showOrderModal, setShowOrderModal] = useState(false);
 
   // Unit conversion multipliers
   const unitMultipliers: Record<string, number> = {
@@ -266,6 +269,15 @@ const Product = () => {
       <SupplierChat 
         supplierName={product.supplier.name} 
         productName={product.name}
+      />
+
+      <OrderPlacement
+        isOpen={showOrderModal}
+        onClose={() => setShowOrderModal(false)}
+        product={product}
+        quantity={quantity}
+        unit={quantityUnit}
+        totalPrice={calculatePrice()}
       />
 
       <Web3Footer />

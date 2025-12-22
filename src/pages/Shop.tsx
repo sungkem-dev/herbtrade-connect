@@ -14,6 +14,7 @@ import { ShoppingCart, TrendingUp, TrendingDown, Coins, Clock, BarChart3, Verifi
 import { SearchAutocomplete } from "@/components/SearchAutocomplete";
 import { SupplierTrendGraph } from "@/components/SupplierTrendGraph";
 import { ProductCardSkeleton, StatCardSkeleton } from "@/components/ui/loading-spinner";
+import { LivePriceTicker, LivePriceBadge } from "@/components/LivePriceTicker";
 
 // Mock price data for blockchain display
 const generateMockPriceChange = () => {
@@ -68,6 +69,9 @@ const Shop = () => {
         <div className="flex justify-center mb-8">
           <SearchAutocomplete onSearch={setSearchQuery} />
         </div>
+
+        {/* Live Price Ticker */}
+        <LivePriceTicker productIds={['CL001', 'AP001', 'CV001', 'PN001', 'MF001']} />
 
         {/* Market Stats Header */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
