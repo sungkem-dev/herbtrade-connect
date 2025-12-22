@@ -1,9 +1,13 @@
+import { useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
 import { CartProvider } from "@/contexts/CartContext";
+import { InitialLoader } from "@/components/InitialLoader";
+import { PageTransition } from "@/components/PageTransition";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -12,6 +16,7 @@ import Contact from "./pages/Contact";
 import Shop from "./pages/Shop";
 import Product from "./pages/Product";
 import Supplier from "./pages/Supplier";
+import Suppliers from "./pages/Suppliers";
 
 import Tracking from "./pages/Tracking";
 import BuyerDashboard from "./pages/buyer/Dashboard";
@@ -27,41 +32,69 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <CartProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/shop" element={<Shop />} />
-            <Route path="/product/:id" element={<Product />} />
-            <Route path="/supplier/:id" element={<Supplier />} />
-            <Route path="/cart" element={<BuyerRequests />} />
-            <Route path="/tracking/:orderId" element={<Tracking />} />
-            <Route path="/tracking" element={<Tracking />} />
-            <Route path="/buyer/dashboard" element={<BuyerDashboard />} />
-            <Route path="/buyer/requests" element={<BuyerRequests />} />
-            <Route path="/buyer/orders" element={<BuyerOrders />} />
-            <Route path="/seller/dashboard" element={<SellerDashboard />} />
-            <Route path="/seller/products" element={<SellerProducts />} />
-            <Route path="/seller/add-product" element={<AddProduct />} />
-            <Route path="/seller/orders" element={<SellerOrders />} />
-            <Route path="/seller/analytics" element={<SellerAnalytics />} />
-            <Route path="/seller/withdraw" element={<SellerWithdraw />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </CartProvider>
-  </QueryClientProvider>
-);
+const AnimatedRoutes = () => {
+  const location = useLocation();
+
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<PageTransition><Index /></PageTransition>} />
+        <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
+        <Route path="/register" element={<PageTransition><Register /></PageTransition>} />
+        <Route path="/about" element={<PageTransition><About /></PageTransition>} />
+        <Route path="/contact" element={<PageTransition><Contact /></PageTransition>} />
+        <Route path="/shop" element={<PageTransition><Shop /></PageTransition>} />
+        <Route path="/product/:id" element={<PageTransition><Product /></PageTransition>} />
+        <Route path="/supplier/:id" element={<PageTransition><Supplier /></PageTransition>} />
+        <Route path="/suppliers" element={<PageTransition><Suppliers /></PageTransition>} />
+        <Route path="/cart" element={<PageTransition><BuyerRequests /></PageTransition>} />
+        <Route path="/tracking/:orderId" element={<PageTransition><Tracking /></PageTransition>} />
+        <Route path="/tracking" element={<PageTransition><Tracking /></PageTransition>} />
+        <Route path="/buyer/dashboard" element={<BuyerDashboard />} />
+        <Route path="/buyer/requests" element={<PageTransition><BuyerRequests /></PageTransition>} />
+        <Route path="/buyer/orders" element={<PageTransition><BuyerOrders /></PageTransition>} />
+        <Route path="/seller/dashboard" element={<SellerDashboard />} />
+        <Route path="/seller/products" element={<PageTransition><SellerProducts /></PageTransition>} />
+        <Route path="/seller/add-product" element={<PageTransition><AddProduct /></PageTransition>} />
+        <Route path="/seller/orders" element={<PageTransition><SellerOrders /></PageTransition>} />
+        <Route path="/seller/analytics" element={<PageTransition><SellerAnalytics /></PageTransition>} />
+        <Route path="/seller/withdraw" element={<PageTransition><SellerWithdraw /></PageTransition>} />
+        <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
+      </Routes>
+    </AnimatePresence>
+  );
+};
+
+const App = () => {
+  const [showLoader, setShowLoader] = useState(true);
+
+  useEffect(() => {
+    // Check if this is the first load of the session
+    const hasLoaded = sessionStorage.getItem("hasLoaded");
+    if (hasLoaded) {
+      setShowLoader(false);
+    }
+  }, []);
+
+  const handleLoaderComplete = () => {
+    setShowLoader(false);
+    sessionStorage.setItem("hasLoaded", "true");
+  };
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <CartProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          {showLoader && <InitialLoader onComplete={handleLoaderComplete} />}
+          <BrowserRouter>
+            <AnimatedRoutes />
+          </BrowserRouter>
+        </TooltipProvider>
+      </CartProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
