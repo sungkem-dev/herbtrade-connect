@@ -1,5 +1,6 @@
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
+import { Web3Header } from "@/components/Web3Header";
+import { Web3Footer } from "@/components/Web3Footer";
+import { Web3Background } from "@/components/Web3Background";
 import { Leaf, Shield, Globe, TrendingUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -7,10 +8,11 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 const About = () => {
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
+    <div className="min-h-screen flex flex-col gradient-bg relative overflow-hidden">
+      <Web3Background />
+      <Web3Header />
       
-      <main className="flex-1">
+      <main className="flex-1 relative z-10 pt-20">
         {/* Hero Section */}
         <section className="py-20 hero-gradient text-primary-foreground">
           <div className="container mx-auto px-4 text-center">
@@ -156,7 +158,7 @@ const About = () => {
         </section>
       </main>
       
-      <Footer />
+      <Web3Footer />
     </div>
   );
 };

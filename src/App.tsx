@@ -11,7 +11,7 @@ import Contact from "./pages/Contact";
 import Shop from "./pages/Shop";
 import Product from "./pages/Product";
 import Supplier from "./pages/Supplier";
-import Cart from "./pages/Cart";
+
 import Tracking from "./pages/Tracking";
 import BuyerDashboard from "./pages/buyer/Dashboard";
 import BuyerRequests from "./pages/buyer/Requests";
@@ -41,7 +41,7 @@ const App = () => (
           <Route path="/shop" element={<Shop />} />
           <Route path="/product/:id" element={<Product />} />
           <Route path="/supplier/:id" element={<Supplier />} />
-          <Route path="/cart" element={<Cart />} />
+          <Route path="/cart" element={<BuyerRequests />} />
           <Route path="/tracking" element={<Tracking />} />
           <Route path="/buyer/dashboard" element={<BuyerDashboard />} />
           <Route path="/buyer/requests" element={<BuyerRequests />} />

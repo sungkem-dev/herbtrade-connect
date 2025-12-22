@@ -58,6 +58,7 @@ const Product = () => {
 
   const handleAddToCart = () => {
     toast.success(`Added ${quantity} ${quantityUnit.toUpperCase()} of ${product.name} to cart!`);
+    window.location.href = '/buyer/requests';
   };
 
   return (
@@ -100,31 +101,33 @@ const Product = () => {
             </div>
 
             {/* Supplier Info */}
-            <Card className="glass-card border-border/50">
-              <CardContent className="pt-4 pb-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center">
-                      <Package className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-semibold">{product.supplier.name}</p>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <MapPin className="h-3 w-3" />
-                        <span>{product.supplier.location}</span>
+            <Link to={`/supplier/${product.supplier.id}`}>
+              <Card className="glass-card border-border/50 hover:border-primary/50 transition-colors cursor-pointer">
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center">
+                        <Package className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-semibold hover:text-primary transition-colors">{product.supplier.name}</p>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <MapPin className="h-3 w-3" />
+                          <span>{product.supplier.location}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="flex items-center gap-1 text-yellow-400">
-                      <Star className="h-4 w-4 fill-current" />
-                      <span className="font-semibold">{product.supplier.rating}</span>
+                    <div className="text-right">
+                      <div className="flex items-center gap-1 text-yellow-400">
+                        <Star className="h-4 w-4 fill-current" />
+                        <span className="font-semibold">{product.supplier.rating}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{product.supplier.totalSales} sales</p>
                     </div>
-                    <p className="text-xs text-muted-foreground">{product.supplier.totalSales} sales</p>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Link>
 
             {/* Price Display */}
             <div className="glass-card border-border/50 rounded-xl p-6">
@@ -204,10 +207,15 @@ const Product = () => {
               </RadioGroup>
             </div>
 
-            <Button size="lg" className="w-full btn-hero" onClick={handleAddToCart}>
-              <ShoppingCart className="mr-2 h-5 w-5" />
-              Add to Cart - ${calculatePrice().toFixed(2)} USDT
-            </Button>
+            <div className="flex gap-3">
+              <Button size="lg" className="flex-1 btn-hero" onClick={handleAddToCart}>
+                <ShoppingCart className="mr-2 h-5 w-5" />
+                Add to Cart
+              </Button>
+              <Button size="lg" className="flex-1 btn-web3" onClick={() => setShowOrderModal(true)}>
+                Buy Now - ${calculatePrice().toFixed(2)} USDT
+              </Button>
+            </div>
 
             {/* Specifications */}
             <Card className="glass-card border-border/50">
