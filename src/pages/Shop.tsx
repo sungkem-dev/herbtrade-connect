@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Web3Header } from "@/components/Web3Header";
 import { Web3Footer } from "@/components/Web3Footer";
 import { Web3Background } from "@/components/Web3Background";
@@ -16,6 +16,7 @@ import { SearchAutocomplete } from "@/components/SearchAutocomplete";
 import { SupplierTrendGraph } from "@/components/SupplierTrendGraph";
 import { ProductCardSkeleton, StatCardSkeleton } from "@/components/ui/loading-spinner";
 import { LivePriceTicker, LivePriceBadge } from "@/components/LivePriceTicker";
+import { useCart } from "@/contexts/CartContext";
 
 // Mock price data for blockchain display
 const generateMockPriceChange = () => {
@@ -24,6 +25,8 @@ const generateMockPriceChange = () => {
 };
 
 const Shop = () => {
+  const navigate = useNavigate();
+  const { addToCart } = useCart();
   const [priceRange, setPriceRange] = useState([0, 500]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [showInStock, setShowInStock] = useState(false);
@@ -334,8 +337,18 @@ const Shop = () => {
                         </Button>
                       </Link>
                       <Button size="icon" className="btn-web3" onClick={() => {
+                        addToCart({
+                          productId: product.id,
+                          productName: product.name,
+                          scientificName: product.scientificName,
+                          quantity: "1 kg",
+                          price: product.usdtPrice,
+                          supplier: product.supplier.name,
+                          supplierId: product.supplier.id,
+                          image: product.image
+                        });
                         toast.success(`Added ${product.name} to cart!`);
-                        window.location.href = '/buyer/requests';
+                        navigate('/buyer/requests');
                       }}>
                         <ShoppingCart className="h-4 w-4" />
                       </Button>
