@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Web3Header } from "@/components/Web3Header";
 import { Web3Footer } from "@/components/Web3Footer";
 import { Web3Background } from "@/components/Web3Background";
@@ -17,9 +17,12 @@ import { TransactionHistory } from "@/components/TransactionHistory";
 import { SupplierChat } from "@/components/SupplierChat";
 import { OrderPlacement } from "@/components/OrderPlacement";
 import { LivePriceDisplay } from "@/components/LivePriceTicker";
+import { useCart } from "@/contexts/CartContext";
 
 const Product = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { addToCart } = useCart();
   const product = products.find(p => p.id === id);
   const [quantity, setQuantity] = useState(1);
   const [quantityUnit, setQuantityUnit] = useState("kg");
@@ -57,8 +60,18 @@ const Product = () => {
   }
 
   const handleAddToCart = () => {
+    addToCart({
+      productId: product.id,
+      productName: product.name,
+      scientificName: product.scientificName,
+      quantity: `${quantity} ${quantityUnit.toUpperCase()}`,
+      price: calculatePrice(),
+      supplier: product.supplier.name,
+      supplierId: product.supplier.id,
+      image: product.image
+    });
     toast.success(`Added ${quantity} ${quantityUnit.toUpperCase()} of ${product.name} to cart!`);
-    window.location.href = '/buyer/requests';
+    navigate('/buyer/requests');
   };
 
   return (
