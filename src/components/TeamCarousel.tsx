@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { motion } from "framer-motion";
+import { useState } from "react";
 
 interface TeamMember {
   name: string;
@@ -55,15 +56,20 @@ const teamMembers: TeamMember[] = [
 ];
 
 export const TeamCarousel = () => {
+  const [isPaused, setIsPaused] = useState(false);
   // Duplicate for seamless infinite scroll
   const duplicatedMembers = [...teamMembers, ...teamMembers];
 
   return (
-    <div className="relative overflow-hidden py-4">
+    <div 
+      className="relative overflow-hidden py-4"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+    >
       <motion.div
         className="flex gap-6"
         animate={{
-          x: [0, -50 * teamMembers.length * 4.5],
+          x: isPaused ? undefined : [0, -50 * teamMembers.length * 4.5],
         }}
         transition={{
           x: {
@@ -77,7 +83,7 @@ export const TeamCarousel = () => {
         {duplicatedMembers.map((member, index) => (
           <Card 
             key={`${member.name}-${index}`}
-            className="flex-shrink-0 w-64 hover:shadow-lg transition-all duration-300 glass-card border-border/50"
+            className="flex-shrink-0 w-64 hover:shadow-lg transition-all duration-300 glass-card border-border/50 hover:scale-105"
           >
             <CardContent className="pt-6 text-center">
               <Avatar className="w-20 h-20 mx-auto mb-4 ring-2 ring-primary/20">
