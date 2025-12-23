@@ -62,16 +62,12 @@ export const TransactionHistory = ({ productId }: TransactionHistoryProps) => {
               className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/30 hover:border-primary/30 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-full ${tx.type === 'buy' ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
-                  {tx.type === 'buy' ? (
-                    <ArrowDownLeft className={`h-4 w-4 ${tx.type === 'buy' ? 'text-green-400' : 'text-red-400'}`} />
-                  ) : (
-                    <ArrowUpRight className={`h-4 w-4 text-red-400`} />
-                  )}
+                <div className="p-2 rounded-full bg-primary/20">
+                  <ArrowDownLeft className="h-4 w-4 text-primary" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-sm capitalize">{tx.type}</span>
+                    <span className="font-medium text-sm">Transaction</span>
                     <Badge variant="outline" className="text-xs">
                       {tx.amount} KG
                     </Badge>
