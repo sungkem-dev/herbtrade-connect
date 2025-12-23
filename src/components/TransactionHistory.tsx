@@ -1,10 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, CheckCircle, Clock, ArrowUpRight, ArrowDownLeft } from "lucide-react";
+import { ExternalLink, CheckCircle, Clock, ArrowRightLeft } from "lucide-react";
 
 interface Transaction {
   id: string;
-  type: 'buy' | 'sell';
   amount: number;
   price: number;
   date: string;
@@ -23,10 +22,9 @@ const generateTransactions = (productId: string): Transaction[] => {
     const date = new Date(now);
     date.setHours(date.getHours() - i * Math.floor(Math.random() * 24));
     
-    transactions.push({
-      id: `TX${productId}${i}`,
-      type: Math.random() > 0.5 ? 'buy' : 'sell',
-      amount: Math.floor(Math.random() * 50) + 1,
+      transactions.push({
+        id: `TX${productId}${i}`,
+        amount: Math.floor(Math.random() * 50) + 1,
       price: parseFloat((Math.random() * 20 + 5).toFixed(2)),
       date: date.toISOString(),
       status: Math.random() > 0.1 ? 'completed' : 'pending',
@@ -63,7 +61,7 @@ export const TransactionHistory = ({ productId }: TransactionHistoryProps) => {
             >
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-full bg-primary/20">
-                  <ArrowDownLeft className="h-4 w-4 text-primary" />
+                  <ArrowRightLeft className="h-4 w-4 text-primary" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">

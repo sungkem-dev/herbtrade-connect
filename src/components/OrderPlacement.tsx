@@ -354,7 +354,7 @@ export const OrderPlacement = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="glass-card border-border/50 max-w-lg">
+      <DialogContent className="glass-card border-border/50 max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {step === 'review' && 'Order Review'}
