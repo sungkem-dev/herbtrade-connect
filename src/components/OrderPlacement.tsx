@@ -17,7 +17,10 @@ import {
   FileText,
   ArrowRight,
   Lock,
-  Zap
+  Zap,
+  Building2,
+  CreditCard,
+  Smartphone
 } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
@@ -49,43 +52,17 @@ export const OrderPlacement = ({
   totalPrice 
 }: OrderPlacementProps) => {
   const [step, setStep] = useState<OrderStep>('review');
-  const [paymentMethod, setPaymentMethod] = useState<string>('usdt');
-  const [walletAddress, setWalletAddress] = useState<string>('');
+  const [paymentMethod, setPaymentMethod] = useState<string>('bank');
   const [isProcessing, setIsProcessing] = useState(false);
   const [txHash, setTxHash] = useState<string>('');
   const { toast } = useToast();
 
-  const cryptoAmount = {
-    usdt: totalPrice,
-    usdc: totalPrice,
-    eth: totalPrice / 3500, // Mock ETH price
-    bnb: totalPrice / 650, // Mock BNB price
-  };
-
-  const handleConnectWallet = async () => {
-    if (typeof window.ethereum !== 'undefined') {
-      try {
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        setWalletAddress(accounts[0]);
-        toast({
-          title: "Wallet Connected",
-          description: `Connected to ${accounts[0].slice(0, 6)}...${accounts[0].slice(-4)}`,
-        });
-      } catch (error) {
-        toast({
-          title: "Connection Failed",
-          description: "Failed to connect wallet. Please try again.",
-          variant: "destructive",
-        });
-      }
-    } else {
-      toast({
-        title: "MetaMask Required",
-        description: "Please install MetaMask to continue.",
-        variant: "destructive",
-      });
-    }
-  };
+  const paymentMethods = [
+    { id: 'bank', name: 'Bank Transfer', icon: Building2, description: 'Direct bank transfer' },
+    { id: 'wallet', name: 'Crypto Wallet', icon: Wallet, description: 'Pay with crypto' },
+    { id: 'card', name: 'Credit/Debit Card', icon: CreditCard, description: 'Visa, Mastercard' },
+    { id: 'mobile', name: 'Mobile Payment', icon: Smartphone, description: 'E-wallet & mobile banking' },
+  ];
 
   const handleProcessOrder = async () => {
     setStep('processing');
@@ -201,17 +178,26 @@ export const OrderPlacement = ({
     <div className="space-y-4">
       <div className="space-y-3">
         <Label>Select Payment Method</Label>
-        <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-          <SelectTrigger className="glass border-border/50">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="usdt">USDT (Tether)</SelectItem>
-            <SelectItem value="usdc">USDC (USD Coin)</SelectItem>
-            <SelectItem value="eth">ETH (Ethereum)</SelectItem>
-            <SelectItem value="bnb">BNB (Binance Coin)</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="grid grid-cols-2 gap-3">
+          {paymentMethods.map((method) => {
+            const Icon = method.icon;
+            return (
+              <button
+                key={method.id}
+                onClick={() => setPaymentMethod(method.id)}
+                className={`p-4 rounded-lg border-2 text-left transition-all ${
+                  paymentMethod === method.id
+                    ? 'border-primary bg-primary/10'
+                    : 'border-border/50 bg-muted/30 hover:border-primary/50'
+                }`}
+              >
+                <Icon className={`h-6 w-6 mb-2 ${paymentMethod === method.id ? 'text-primary' : 'text-muted-foreground'}`} />
+                <p className="font-medium text-sm">{method.name}</p>
+                <p className="text-xs text-muted-foreground">{method.description}</p>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <Card className="glass-card border-border/50">
@@ -220,55 +206,28 @@ export const OrderPlacement = ({
             <span className="text-muted-foreground">Amount to Pay</span>
             <div className="text-right">
               <div className="text-xl font-bold text-primary">
-                {cryptoAmount[paymentMethod as keyof typeof cryptoAmount].toFixed(
-                  paymentMethod === 'eth' || paymentMethod === 'bnb' ? 6 : 2
-                )} {paymentMethod.toUpperCase()}
+                ${totalPrice.toFixed(2)} USD
               </div>
               <div className="text-sm text-muted-foreground">
-                ≈ ${(totalPrice * 1.02 + 2.5).toFixed(2)} USD
+                + ${(totalPrice * 0.02).toFixed(2)} processing fee
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <div className="space-y-3">
-        <Label>Wallet Address</Label>
-        {walletAddress ? (
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/10 border border-primary/30">
-            <Wallet className="h-5 w-5 text-primary" />
-            <div className="flex-1">
-              <p className="text-sm font-medium">Connected</p>
-              <p className="text-xs font-mono text-muted-foreground">
-                {walletAddress.slice(0, 10)}...{walletAddress.slice(-8)}
-              </p>
-            </div>
-            <Badge className="bg-primary/20 text-primary">MetaMask</Badge>
-          </div>
-        ) : (
-          <Button 
-            variant="outline" 
-            className="w-full glass border-border/50"
-            onClick={handleConnectWallet}
-          >
-            <Wallet className="h-4 w-4 mr-2" />
-            Connect Wallet
-          </Button>
-        )}
-      </div>
-
       <div className="grid grid-cols-3 gap-3 text-center py-4">
         <div className="p-3 rounded-lg bg-muted/50">
           <Lock className="h-5 w-5 mx-auto mb-1 text-primary" />
-          <p className="text-xs text-muted-foreground">Secure Escrow</p>
+          <p className="text-xs text-muted-foreground">Secure Payment</p>
         </div>
         <div className="p-3 rounded-lg bg-muted/50">
           <Zap className="h-5 w-5 mx-auto mb-1 text-primary" />
-          <p className="text-xs text-muted-foreground">Instant Settlement</p>
+          <p className="text-xs text-muted-foreground">Fast Processing</p>
         </div>
         <div className="p-3 rounded-lg bg-muted/50">
-          <FileText className="h-5 w-5 mx-auto mb-1 text-primary" />
-          <p className="text-xs text-muted-foreground">Smart Contract</p>
+          <Shield className="h-5 w-5 mx-auto mb-1 text-primary" />
+          <p className="text-xs text-muted-foreground">Buyer Protection</p>
         </div>
       </div>
 
@@ -283,7 +242,6 @@ export const OrderPlacement = ({
         <Button 
           className="flex-1 btn-hero"
           onClick={handleProcessOrder}
-          disabled={!walletAddress}
         >
           Place Order
           <ArrowRight className="h-4 w-4 ml-2" />
@@ -359,10 +317,12 @@ export const OrderPlacement = ({
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Amount</span>
             <span className="font-semibold text-primary">
-              {cryptoAmount[paymentMethod as keyof typeof cryptoAmount].toFixed(
-                paymentMethod === 'eth' || paymentMethod === 'bnb' ? 6 : 2
-              )} {paymentMethod.toUpperCase()}
+              ${totalPrice.toFixed(2)} USD
             </span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Payment Method</span>
+            <span className="capitalize">{paymentMethods.find(m => m.id === paymentMethod)?.name}</span>
           </div>
         </CardContent>
       </Card>
