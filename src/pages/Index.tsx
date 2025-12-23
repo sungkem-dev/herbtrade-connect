@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { TeamCarousel } from "@/components/TeamCarousel";
 import { Web3Header } from "@/components/Web3Header";
 import { Web3Footer } from "@/components/Web3Footer";
 import { Web3Background } from "@/components/Web3Background";
@@ -250,43 +250,10 @@ const Index = () => {
             </div>
           </div>
 
-          {/* Testimonials */}
+          {/* Our Team */}
           <div ref={addToRefs} className="animate-on-scroll mt-24">
-            <h3 className="text-3xl font-bold text-center mb-12 text-primary">Apa Kata Mereka</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {[
-                {
-                  name: "Rizky Pratama",
-                  role: "Herbal Buyer",
-                  image: "https://randomuser.me/api/portraits/men/1.jpg",
-                  quote: "Produk herbalnya sangat berkualitas, pengiriman cepat, dan pelayanan ramah! HerBlocX benar-benar memudahkan proses pembelian bahan baku herbal untuk bisnis saya."
-                },
-                {
-                  name: "Siti Aisyah",
-                  role: "Supplier",
-                  image: "https://randomuser.me/api/portraits/women/2.jpg",
-                  quote: "Sebagai supplier, HerBlocX memberikan platform yang sangat transparan dan terpercaya. Saya bisa menjangkau pembeli dari berbagai negara dengan mudah!"
-                },
-                {
-                  name: "Budi Santoso",
-                  role: "Customer",
-                  image: "https://randomuser.me/api/portraits/men/3.jpg",
-                  quote: "Pengalaman berbelanja di HerBlocX luar biasa! Semua produk tersertifikasi dan tracking pengiriman sangat akurat. Highly recommended!"
-                }
-              ].map((testimonial) => (
-                <Card key={testimonial.name} className="glass-card border-border/50 card-hover">
-                  <CardContent className="pt-6 text-center">
-                    <Avatar className="w-20 h-20 mx-auto mb-4">
-                      <AvatarImage src={testimonial.image} alt={testimonial.name} />
-                      <AvatarFallback>{testimonial.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                    </Avatar>
-                    <h4 className="text-xl font-semibold mb-1">{testimonial.name}</h4>
-                    <p className="text-sm text-muted-foreground mb-4">{testimonial.role}</p>
-                    <p className="text-muted-foreground leading-relaxed">"{testimonial.quote}"</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <h3 className="text-3xl font-bold text-center mb-12 text-primary">Our Team</h3>
+            <TeamCarousel />
           </div>
         </div>
       </section>
