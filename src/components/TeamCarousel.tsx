@@ -11,45 +11,45 @@ interface TeamMember {
 
 const teamMembers: TeamMember[] = [
   {
-    name: "Ahmad Kurniawan",
-    role: "CEO & Founder",
+    name: "Raihan Adz Dzikra",
+    role: "Leader",
     image: "yan.jpg",
     initials: "AK"
   },
   {
-    name: "Siti Rahayu",
-    role: "CTO",
+    name: "Iriena Feyza Zafira Rosyidi",
+    role: "Research and Development",
     image: "zaf.jpg",
     initials: "SR"
   },
   {
-    name: "Budi Santoso",
-    role: "Head of Operations",
+    name: "Fionna Nur Illahi",
+    role: "Business Manager",
     image: "fio.jpg",
     initials: "BS"
   },
   {
-    name: "Dewi Lestari",
+    name: "Dustin Favian Baihaqi",
     role: "Marketing Director",
-    image: "dus.jpg",
+    image: "dus.JPG",
     initials: "DL"
   },
   {
-    name: "Rizky Pratama",
-    role: "Product Manager",
-    image: "aul.jpg",
+    name: "Aulia Rahmah Fitriah",
+    role: "Research and Development",
+    image: "aul.JPG",
     initials: "RP"
   },
   {
-    name: "Anisa Putri",
-    role: "Head of Partnerships",
+    name: "Muhammad Fariz Abid R",
+    role: "Backend Developer",
     image: "nyam.jpg",
     initials: "AP"
   },
   {
-    name: "Fahri Rahman",
-    role: "Lead Developer",
-    image: "https://randomuser.me/api/portraits/men/91.jpg",
+    name: "Topan Suryadi Laga",
+    role: "Frontend Developer",
+    image: "Topan.jpg",
     initials: "FR"
   }
 ];
