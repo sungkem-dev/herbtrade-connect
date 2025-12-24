@@ -44,31 +44,38 @@ const teamMembers: TeamMember[] = [
 
 export const TeamCarousel = () => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 py-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 py-4">
       {teamMembers.map((member) => (
         <div 
           key={member.name}
-          className="flex gap-6 items-start bg-card rounded-lg p-4 hover:shadow-lg transition-all duration-300 border border-border/30"
+          className="group flex flex-row sm:flex-col lg:flex-row gap-4 sm:gap-3 lg:gap-5 items-start sm:items-center lg:items-start bg-card rounded-xl p-4 sm:p-5 border border-border/30 cursor-pointer
+            transition-all duration-300 ease-out
+            hover:shadow-xl hover:shadow-primary/10 hover:border-primary/30
+            hover:-translate-y-1 hover:scale-[1.02]"
         >
           {/* Photo */}
-          <div className="flex-shrink-0">
-            <div className="w-32 h-40 rounded-lg overflow-hidden bg-muted">
+          <div className="flex-shrink-0 overflow-hidden rounded-lg">
+            <div className="w-24 h-28 sm:w-full sm:h-48 lg:w-28 lg:h-36 rounded-lg overflow-hidden bg-muted
+              transition-transform duration-300 group-hover:scale-105">
               <img 
                 src={member.image} 
                 alt={member.name}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
               />
             </div>
           </div>
           
           {/* Info */}
-          <div className="flex flex-col justify-center pt-2">
-            <h3 className="text-lg font-bold text-foreground leading-tight mb-3">
+          <div className="flex flex-col justify-center sm:text-center lg:text-left pt-1 sm:pt-0">
+            <h3 className="text-base sm:text-lg font-bold text-foreground leading-tight mb-2 sm:mb-3
+              transition-colors duration-300 group-hover:text-primary">
               {member.name}
             </h3>
-            <div className="flex items-start gap-2">
-              <div className="w-1 h-10 bg-primary rounded-full flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-muted-foreground leading-relaxed">
+            <div className="flex items-start gap-2 sm:justify-center lg:justify-start">
+              <div className="w-1 h-8 sm:h-6 bg-primary rounded-full flex-shrink-0 mt-0.5
+                transition-all duration-300 group-hover:h-10 group-hover:bg-primary/80" />
+              <p className="text-sm text-muted-foreground leading-relaxed
+                transition-colors duration-300 group-hover:text-foreground/80">
                 {member.role}
               </p>
             </div>
