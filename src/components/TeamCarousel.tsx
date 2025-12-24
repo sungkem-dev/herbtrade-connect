@@ -1,3 +1,5 @@
+import { motion } from "framer-motion";
+
 interface TeamMember {
   name: string;
   role: string;
@@ -42,12 +44,47 @@ const teamMembers: TeamMember[] = [
   }
 ];
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+const cardVariants = {
+  hidden: { 
+    opacity: 0, 
+    y: 40,
+    scale: 0.95,
+  },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.5,
+      ease: "easeOut" as const,
+    },
+  },
+};
+
 export const TeamCarousel = () => {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 py-4">
+    <motion.div 
+      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 py-4"
+      variants={containerVariants}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: "-50px" }}
+    >
       {teamMembers.map((member) => (
-        <div 
+        <motion.div 
           key={member.name}
+          variants={cardVariants}
           className="group flex flex-row sm:flex-col lg:flex-row gap-4 sm:gap-3 lg:gap-5 items-start sm:items-center lg:items-start bg-card rounded-xl p-4 sm:p-5 border border-border/30 cursor-pointer
             transition-all duration-300 ease-out
             hover:shadow-xl hover:shadow-primary/10 hover:border-primary/30
@@ -80,8 +117,8 @@ export const TeamCarousel = () => {
               </p>
             </div>
           </div>
-        </div>
+        </motion.div>
       ))}
-    </div>
+    </motion.div>
   );
 };
