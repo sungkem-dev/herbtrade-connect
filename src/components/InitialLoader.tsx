@@ -42,7 +42,7 @@ export const InitialLoader = ({ onComplete }: InitialLoaderProps) => {
               ease: [0.34, 1.56, 0.64, 1],
             }}
           >
-            <Leaf className="h-10 w-10 text-primary" />
+            <img src="/icon.png" alt="HerBlocX" className="h-8 w-6" />
           </motion.div>
         </div>
 

@@ -9,7 +9,7 @@ export const Web3Footer = () => {
           {/* Brand */}
           <div className="col-span-1 md:col-span-2">
             <Link to="/" className="flex items-center gap-2 mb-4">
-              <img src="/icon.png" alt="HerBlocX" className="h-8 w-8" />
+              <img src="/icon.png" alt="HerBlocX" className="h-8 w-6" />
               <span className="text-xl font-bold text-gradient-hero">HerBlocX</span>
             </Link>
             <p className="text-muted-foreground max-w-sm mb-4">

@@ -376,7 +376,7 @@ const Shop = () => {
                   <p className="text-sm text-muted-foreground">View all verified suppliers and their products</p>
                 </div>
               </div>
-              <Link to="/supplier/S001">
+              <Link to="/suppliers">
                 <Button className="btn-web3">
                   <Store className="h-4 w-4 mr-2" />
                   View Suppliers

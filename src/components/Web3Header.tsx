@@ -100,7 +100,7 @@ export const Web3Header = () => {
           <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2">
-              <img src="/icon.png" alt="HerBlocX" className="h-8 w-8" />
+              <img src="/icon.png" alt="HerBlocX" className="h-8 w-6" />
               <span className="text-xl font-bold text-gradient-hero">HerBlocX</span>
             </Link>
 

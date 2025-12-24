@@ -13,37 +13,37 @@ const teamMembers: TeamMember[] = [
   {
     name: "Ahmad Kurniawan",
     role: "CEO & Founder",
-    image: "https://randomuser.me/api/portraits/men/32.jpg",
+    image: "yan.jpg",
     initials: "AK"
   },
   {
     name: "Siti Rahayu",
     role: "CTO",
-    image: "https://randomuser.me/api/portraits/women/44.jpg",
+    image: "zaf.jpg",
     initials: "SR"
   },
   {
     name: "Budi Santoso",
     role: "Head of Operations",
-    image: "https://randomuser.me/api/portraits/men/52.jpg",
+    image: "fio.jpg",
     initials: "BS"
   },
   {
     name: "Dewi Lestari",
     role: "Marketing Director",
-    image: "https://randomuser.me/api/portraits/women/68.jpg",
+    image: "dus.jpg",
     initials: "DL"
   },
   {
     name: "Rizky Pratama",
     role: "Product Manager",
-    image: "https://randomuser.me/api/portraits/men/75.jpg",
+    image: "aul.jpg",
     initials: "RP"
   },
   {
     name: "Anisa Putri",
     role: "Head of Partnerships",
-    image: "https://randomuser.me/api/portraits/women/89.jpg",
+    image: "nyam.jpg",
     initials: "AP"
   },
   {
