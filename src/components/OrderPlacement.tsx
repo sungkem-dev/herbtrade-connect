@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
+import { useOrders } from "@/contexts/OrderContext";
 import { 
   Wallet, 
   Shield, 
@@ -56,6 +57,7 @@ export const OrderPlacement = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [txHash, setTxHash] = useState<string>('');
   const { toast } = useToast();
+  const { addOrder } = useOrders();
 
   const paymentMethods = [
     { id: 'bank', name: 'Bank Transfer', icon: Building2, description: 'Direct bank transfer' },
@@ -79,6 +81,19 @@ export const OrderPlacement = ({
     setTxHash(mockTxHash);
     setIsProcessing(false);
     setStep('confirmation');
+
+    // Add order to history
+    addOrder({
+      txHash: mockTxHash,
+      productName: product.name,
+      productId: product.id,
+      productImage: product.image,
+      quantity: `${quantity} ${unit.toUpperCase()}`,
+      price: totalPrice,
+      supplier: product.supplier.name,
+      paymentMethod: paymentMethods.find(m => m.id === paymentMethod)?.name || 'Unknown',
+      status: 'processing',
+    });
 
     toast({
       title: "Order Confirmed!",

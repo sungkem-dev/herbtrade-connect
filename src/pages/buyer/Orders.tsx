@@ -4,54 +4,7 @@ import { Web3Background } from "@/components/Web3Background";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRightLeft, CheckCircle, Clock, AlertCircle, Package } from "lucide-react";
-
-const mockOrders = [
-  {
-    id: "0x8f4e...3a2b",
-    productName: "Jahe Merah Premium",
-    date: "2025-01-10",
-    price: "125.50 USDT",
-    status: "delivered",
-    from: "0x7a3f...9c1d",
-    to: "0x2b8e...4f6a",
-  },
-  {
-    id: "0x2c7a...8d1f",
-    productName: "Kunyit Organik",
-    date: "2025-01-08",
-    price: "89.00 USDC",
-    status: "shipped",
-    from: "0x4e2c...7b3a",
-    to: "0x9f1a...2d8c",
-  },
-  {
-    id: "0x5b9d...1e4a",
-    productName: "Temulawak Kering",
-    date: "2025-01-05",
-    price: "210.75 USDT",
-    status: "processing",
-    from: "0x3a8f...6c2e",
-    to: "0x1d7b...5a9f",
-  },
-  {
-    id: "0x9e3c...7f2b",
-    productName: "Lengkuas Segar",
-    date: "2025-01-03",
-    price: "67.25 USDC",
-    status: "delivered",
-    from: "0x6b4d...2e8a",
-    to: "0x8c1f...3b7d",
-  },
-  {
-    id: "0x1a7f...4c9e",
-    productName: "Kencur Premium",
-    date: "2024-12-28",
-    price: "156.00 USDT",
-    status: "delivered",
-    from: "0x5e2b...9a4c",
-    to: "0x7d3f...1c6e",
-  },
-];
+import { useOrders } from "@/contexts/OrderContext";
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -67,6 +20,8 @@ const getStatusColor = (status: string) => {
 };
 
 const BuyerOrders = () => {
+  const { orders } = useOrders();
+
   return (
     <div className="min-h-screen flex flex-col gradient-bg relative overflow-hidden">
       <Web3Background />
@@ -80,7 +35,7 @@ const BuyerOrders = () => {
           </p>
         </div>
 
-        {mockOrders.length > 0 ? (
+        {orders.length > 0 ? (
           <Card className="glass-card border-border/50 animate-fade-in">
             <CardHeader className="flex flex-row items-center gap-3 pb-4">
               <div className="p-2 bg-primary/20 rounded-lg glow-primary">
@@ -89,9 +44,9 @@ const BuyerOrders = () => {
               <CardTitle className="text-lg">Transaction History</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {mockOrders.map((order, index) => (
+              {orders.map((order, index) => (
                 <div
-                  key={order.id}
+                  key={order.id + index}
                   className="flex flex-col md:flex-row md:items-center justify-between p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors animate-fade-in"
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
@@ -121,7 +76,7 @@ const BuyerOrders = () => {
                     </div>
                     
                     <div className="text-right flex flex-row md:flex-col items-center md:items-end gap-2">
-                      <p className="text-sm font-semibold text-primary">{order.price}</p>
+                      <p className="text-sm font-semibold text-primary">${order.price.toFixed(2)} USDT</p>
                       <Badge
                         variant="outline"
                         className={getStatusColor(order.status)}

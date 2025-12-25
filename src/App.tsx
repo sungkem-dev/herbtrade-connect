@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { CartProvider } from "@/contexts/CartContext";
+import { OrderProvider } from "@/contexts/OrderContext";
 import { InitialLoader } from "@/components/InitialLoader";
 import { PageTransition } from "@/components/PageTransition";
 import { ScrollToTop } from "@/components/ScrollToTop";
@@ -84,17 +85,19 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <CartProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          {showLoader && <InitialLoader onComplete={handleLoaderComplete} />}
-          <BrowserRouter>
-            <ScrollToTop />
-            <AnimatedRoutes />
-          </BrowserRouter>
-        </TooltipProvider>
-      </CartProvider>
+      <OrderProvider>
+        <CartProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            {showLoader && <InitialLoader onComplete={handleLoaderComplete} />}
+            <BrowserRouter>
+              <ScrollToTop />
+              <AnimatedRoutes />
+            </BrowserRouter>
+          </TooltipProvider>
+        </CartProvider>
+      </OrderProvider>
     </QueryClientProvider>
   );
 };
