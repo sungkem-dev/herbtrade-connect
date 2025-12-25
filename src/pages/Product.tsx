@@ -9,7 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Minus, Plus, ShoppingCart, MapPin, Shield, Star, Package } from "lucide-react";
+import { Minus, Plus, ShoppingCart, MapPin, Shield, Star, Package, LogIn } from "lucide-react";
 import { products } from "@/lib/products";
 import { toast } from "sonner";
 import { PriceChart } from "@/components/PriceChart";
@@ -18,6 +18,7 @@ import { SupplierChat } from "@/components/SupplierChat";
 import { OrderPlacement } from "@/components/OrderPlacement";
 import { LivePriceDisplay } from "@/components/LivePriceTicker";
 import { useCart } from "@/contexts/CartContext";
+import { authService } from "@/lib/auth";
 
 const Product = () => {
   const { id } = useParams();
@@ -28,6 +29,8 @@ const Product = () => {
   const [quantityUnit, setQuantityUnit] = useState("kg");
   const [purchaseType, setPurchaseType] = useState("one-time");
   const [showOrderModal, setShowOrderModal] = useState(false);
+
+  const isLoggedIn = authService.isAuthenticated();
 
   // Unit conversion multipliers
   const unitMultipliers: Record<string, number> = {
@@ -60,6 +63,16 @@ const Product = () => {
   }
 
   const handleAddToCart = () => {
+    if (!isLoggedIn) {
+      toast.error("Please login to add items to cart", {
+        action: {
+          label: "Login",
+          onClick: () => navigate('/login'),
+        },
+      });
+      return;
+    }
+
     addToCart({
       productId: product.id,
       productName: product.name,
@@ -72,6 +85,19 @@ const Product = () => {
     });
     toast.success(`Added ${quantity} ${quantityUnit.toUpperCase()} of ${product.name} to cart!`);
     navigate('/buyer/requests');
+  };
+
+  const handleBuyNow = () => {
+    if (!isLoggedIn) {
+      toast.error("Please login to make a purchase", {
+        action: {
+          label: "Login",
+          onClick: () => navigate('/login'),
+        },
+      });
+      return;
+    }
+    setShowOrderModal(true);
   };
 
   return (
@@ -222,10 +248,10 @@ const Product = () => {
 
             <div className="flex gap-3">
               <Button size="lg" className="flex-1 btn-hero" onClick={handleAddToCart}>
-                <ShoppingCart className="mr-2 h-5 w-5" />
-                Add to Cart
+                {isLoggedIn ? <ShoppingCart className="mr-2 h-5 w-5" /> : <LogIn className="mr-2 h-5 w-5" />}
+                {isLoggedIn ? 'Add to Cart' : 'Login to Add'}
               </Button>
-              <Button size="lg" className="flex-1 btn-web3" onClick={() => setShowOrderModal(true)}>
+              <Button size="lg" className="flex-1 btn-web3" onClick={handleBuyNow}>
                 Buy Now - ${calculatePrice().toFixed(2)} USDT
               </Button>
             </div>
