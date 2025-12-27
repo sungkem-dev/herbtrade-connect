@@ -1,6 +1,6 @@
 # Dokumentasi Herblocx
 
-Dokumentasi lengkap untuk sistem Herblocx - Platform marketplace herbal berbasis blockchain.
+Dokumentasi lengkap untuk sistem Herblocx, Platform marketplace herbal berbasis blockchain.
 
 ## Daftar Isi
 
