@@ -1,6 +1,6 @@
 # Use Case Specification - Herblocx
 
-## Daftar Use Case
+## Use Case fitur herblocx
 
 | Kategori | UC-ID | Nama Use Case | Aktor |
 |----------|-------|---------------|-------|
