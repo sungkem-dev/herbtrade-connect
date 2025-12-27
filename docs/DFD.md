@@ -1,6 +1,6 @@
 # Data Flow Diagram (DFD) - Herblocx
 
-## DFD Level 0 - Context Diagram
+## DFD Level 0 - Context 
 
 ```mermaid
 graph TB
