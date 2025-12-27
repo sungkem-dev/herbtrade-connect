@@ -4,7 +4,7 @@ Dokumentasi flowchart untuk semua fitur di platform Herblocx.
 
 ---
 
-## 1. Authentication Flowcharts
+## 1. Authentication Flowchart
 
 ### 1.1 Register Flow
 
