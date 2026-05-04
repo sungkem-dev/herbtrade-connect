@@ -44,7 +44,7 @@ export const ComplianceStatusBadge = ({ value, tone, className }: ComplianceStat
 
   return (
     <Badge variant="outline" className={cn("capitalize", toneClasses[selectedTone], className)}>
-      {value.replaceAll("_", " ")}
+      {value.replace(/_/g, " ")}
     </Badge>
   );
 };

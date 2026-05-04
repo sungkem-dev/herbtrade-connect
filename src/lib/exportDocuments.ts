@@ -202,7 +202,7 @@ export const generateExportDocument = (
   }
 
   addFooter(doc, displayBatch.txHash);
-  doc.save(`${documentTitle.replaceAll(" ", "-").toLowerCase()}-${displayBatch.batchCode}.pdf`);
+  doc.save(`${documentTitle.replace(/ /g, "-").toLowerCase()}-${displayBatch.batchCode}.pdf`);
 };
 
 export const generateAllExportDocuments = (profile: SellerAdministrativeProfile, batch?: ProductBatch) => {
