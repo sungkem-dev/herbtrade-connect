@@ -1,78 +1,100 @@
 
 
-## Tiga Fitur Baru: Buyer Request Form, AI Review-Based Recommendations, dan Seasonal System
+## Feature Summary Document — Herblocx
 
-### 1. Fitur Permintaan Buyer (Buyer Product Request)
+Membuat dokumen ringkasan fitur (Feature Summary) untuk Herblocx dalam dua format: file Markdown di `docs/` dan PDF yang bisa diunduh di `/mnt/documents/`.
 
-Membuat halaman baru di mana buyer bisa mengajukan permintaan produk herbal yang mereka butuhkan ke supplier.
+### Tujuan
+Dokumen ringkas dan terstruktur yang menjelaskan **semua fitur** yang ada di Herblocx, dikelompokkan per kategori dengan deskripsi singkat tiap fitur. Dokumen ini cocok untuk presentasi, onboarding tim baru, atau lampiran proposal.
 
-**Buat `src/pages/buyer/ProductRequest.tsx`**
-- Form berisi: nama produk, jumlah yang dibutuhkan, unit, budget range, deskripsi kebutuhan, preferred location/category
-- Data disimpan ke localStorage via context baru
-- Daftar permintaan yang sudah diajukan ditampilkan di bawah form dengan status (open/matched/closed)
+### Isi Dokumen
 
-**Buat `src/contexts/BuyerRequestContext.tsx`**
-- Interface: `BuyerRequest { id, productName, quantity, unit, budgetMin, budgetMax, description, category, status, createdAt, matchedSuppliers[] }`
-- CRUD operations dengan localStorage persistence
+**1. Cover & Overview**
+- Nama: Herblocx — Blockchain Herbal Marketplace
+- Tagline & deskripsi singkat
+- Tech stack singkat (React 18, TypeScript, Vite, Tailwind, shadcn/ui)
 
-**Update routing & dashboard:**
-- Tambah route `/buyer/product-request` di `App.tsx`
-- Tambah card "Product Request" di Quick Actions buyer dashboard
+**2. Authentication & User Roles**
+- Register & Login (email/password via localStorage)
+- Dual role: Buyer & Seller
+- Logout & session management
 
-### 2. AI Recommendations Berdasarkan Review/Testimoni
+**3. Marketplace (Public)**
+- Landing page dengan hero, featured products, team carousel
+- Shop page (browse produk dengan filter & search)
+- Product detail page (spesifikasi, supplier info, reviews, seasonal badge)
+- Supplier directory & supplier detail page
+- Search autocomplete
+- Seasonal banner (produk yang sedang musim)
+- Community page
 
-**Update `src/lib/products.ts`**
-- Tambah field `reviews` ke Product interface:
-  ```
-  reviews: { user: string, rating: number, comment: string, date: string }[]
-  ```
-- Tambah mock review data ke setiap produk (3-5 review per produk)
+**4. Buyer Features**
+- Buyer Dashboard (quick actions, blockchain stats)
+- Cart & Checkout (simulated blockchain transaction)
+- Order history & tracking
+- Shipment map tracking (Leaflet)
+- Buyer Requests (lihat permintaan)
+- Product Request form (ajukan kebutuhan produk ke supplier)
+- AI Assistant page (rekomendasi berbasis review, musim, harga)
 
-**Update `src/pages/buyer/AIAssistant.tsx`**
-- Tambah handler untuk keyword "review"/"testimoni"/"ulasan"
-- AI akan merekomendasikan supplier berdasarkan rata-rata review rating, jumlah review positif, dan kutipan review terbaik
-- Quick action baru: "Top Reviewed Suppliers"
+**5. Seller Features**
+- Seller Dashboard (revenue, orders summary)
+- Product management (Add, Edit, Delete)
+- Order management
+- Analytics dengan grafik (Recharts)
+- Withdraw funds (simulated)
+- Supplier chat
+- AI Assistant page (pricing strategy, stock optimization, market trends)
 
-**Update `src/pages/seller/AIAssistant.tsx`**
-- Tambah handler untuk keyword "review"/"feedback"
-- AI memberikan insight tentang review produk seller dan saran improvement
+**6. AI Assistant System**
+- Keyword-based pattern matching (TypeScript logic, bukan LLM asli)
+- Buyer mode: rekomendasi produk, supplier ranking, perbandingan harga, review-based suggestions, seasonal recommendations
+- Seller mode: pricing strategy, stock optimization, market trends, review insights
+- Quick actions sidebar
 
-### 3. Fitur Musim (Seasonal System)
+**7. Seasonal System**
+- Logika musim Indonesia (Musim Hujan & Kemarau)
+- Data per produk: musim tanam & panen
+- Helper: `getCurrentSeason()`, `getSeasonalProductIds()`, `getUpcomingHarvestProducts()`
+- Banner & badge "In Season" di Shop page
 
-**Buat `src/lib/seasons.ts`**
-- Definisi musim Indonesia: Musim Hujan (Oct-Mar), Musim Kemarau (Apr-Sep)
-- Data seasonal per produk: kapan musim tanam, musim panen, ketersediaan optimal
-- Fungsi `getCurrentSeason()` berdasarkan bulan sekarang (Date)
-- Fungsi `getSeasonalProducts()` yang return produk yang sedang musim panen/tersedia
-- Data contoh:
-  - Turmeric: panen Musim Kemarau (Jun-Sep)
-  - Cinnamon: panen sepanjang tahun
-  - Black Pepper: panen Musim Hujan (Dec-Feb)
-  - dll.
+**8. Blockchain Simulation**
+- Wallet Connect Modal
+- Live price ticker
+- Transaction hashes (mock)
+- Transaction history & detail page
+- Blockchain stats widget
+- Real-time transaction simulation
 
-**Update `src/pages/buyer/AIAssistant.tsx` & `src/pages/seller/AIAssistant.tsx`**
-- Tambah handler keyword "musim"/"season"/"seasonal"
-- AI menampilkan produk yang sedang musim saat ini, produk yang akan segera musim, dan saran stok berdasarkan musim
-- Quick action baru: "Current Season" / "Musim Saat Ini"
+**9. UI/UX Features**
+- Dark Web 3.0 theme (gradient, glow, glass morphism)
+- Framer Motion animations & page transitions
+- Initial loader
+- Responsive design
+- Particle background (Web3Background)
 
-**Update `src/pages/Shop.tsx`**
-- Tambah banner/section "Currently In Season 🌿" di atas product grid
-- Tampilkan badge "In Season" pada product card yang sedang musim
+**10. Roadmap (Future Features)**
+- Real LLM integration untuk AI Assistant (Lovable AI Gateway / Gemini)
+- Supabase backend (real auth, database, RLS)
+- Real payment gateway (Midtrans/Stripe)
+- Real blockchain integration (Web3 wallet, smart contracts)
+- Real-time notifications
+- Multi-language (i18n)
+- Mobile app
+- Admin panel
+- Email notifications
 
-**Update `src/pages/Index.tsx` (homepage)**
-- Tambah section seasonal highlight di landing page
-
-### File yang dibuat/diubah
+### File yang dibuat
 
 | File | Aksi |
 |------|------|
-| `src/lib/seasons.ts` | Baru — seasonal data & helpers |
-| `src/contexts/BuyerRequestContext.tsx` | Baru — buyer request state management |
-| `src/pages/buyer/ProductRequest.tsx` | Baru — form & list permintaan buyer |
-| `src/lib/products.ts` | Ubah — tambah reviews field |
-| `src/pages/buyer/AIAssistant.tsx` | Ubah — tambah review & season handlers |
-| `src/pages/seller/AIAssistant.tsx` | Ubah — tambah review & season handlers |
-| `src/pages/Shop.tsx` | Ubah — seasonal banner & badge |
-| `src/pages/buyer/Dashboard.tsx` | Ubah — tambah Product Request card |
-| `src/App.tsx` | Ubah — tambah route & context provider |
+| `docs/FEATURE-SUMMARY.md` | Baru — versi Markdown untuk repo |
+| `/mnt/documents/Herblocx_Feature_Summary.pdf` | Baru — versi PDF untuk diunduh user |
+| `docs/README.md` | Ubah — tambah link ke FEATURE-SUMMARY.md |
+
+### Proses Pembuatan PDF
+1. Tulis konten lengkap di `docs/FEATURE-SUMMARY.md`
+2. Generate PDF menggunakan Python (reportlab) dengan styling rapi: cover page, table of contents, section headers, bullet points
+3. QA visual — convert PDF ke image, inspeksi setiap halaman untuk memastikan layout bersih, tidak ada teks terpotong
+4. Tampilkan via `<lov-artifact>` agar user bisa langsung preview/download
 
