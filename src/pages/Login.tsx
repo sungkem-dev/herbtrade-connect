@@ -16,30 +16,23 @@ import { toast } from "sonner";
 const Login = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
+    email: "",
+    password: "",
   });
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!formData.email || !formData.password) {
-      toast.error("Please fill in all fields");
-      return;
+    setLoading(true);
+    try {
+      await authService.signIn(formData.email, formData.password);
+      toast.success("Logged in successfully!");
+      navigate("/"); // Redirect to home or dashboard after login
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
     }
-
-    const user = {
-      name: formData.email.split('@')[0],
-      email: formData.email,
-      company: "HerBlocX General Account",
-      country: "Indonesia",
-      role: 'general' as const,
-      kycStatus: 'not_started' as const,
-    };
-
-    authService.login(user);
-    toast.success("Logged in as a general account. Complete KYC to trade.");
-    navigate('/kyc');
   };
 
   const handleGoogleLogin = () => {
@@ -101,8 +94,8 @@ const Login = () => {
                 />
               </div>
 
-              <Button type="submit" className="w-full btn-web3" size="lg">
-                Continue as General User
+              <Button type="submit" className="w-full btn-web3" size="lg" disabled={loading}>
+                {loading ? "Logging in..." : "Login"}
               </Button>
 
               <div className="relative">
@@ -119,6 +112,7 @@ const Login = () => {
                 variant="outline"
                 onClick={handleGoogleLogin}
                 className="w-full glass border-border/50 hover:bg-primary/10 transition-all"
+                disabled={loading}
               >
                 <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                   <path

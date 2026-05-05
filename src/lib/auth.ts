@@ -1,158 +1,147 @@
-export type UserRole = 'general' | 'buyer' | 'seller';
-export type TradeRole = Exclude<UserRole, 'general'>;
-export type KycStatus = 'not_started' | 'draft' | 'pending' | 'verified' | 'rejected';
-export type LegalEntityType = 'individual' | 'business_entity';
+import { supabase } from "@/integrations/supabase/client";
+import { Database } from "@/integrations/supabase/types";
 
-export interface BaseKycProfile {
-  legalEntityType: LegalEntityType;
-  legalName: string;
-  businessEntityName: string;
-  nibNumber: string;
-  nikOrNpwp: string;
-  registeredAddress: string;
-  phone: string;
-  email: string;
-  submittedAt: string;
-  updatedAt: string;
-}
-
-export interface SellerKycProfile extends BaseKycProfile {
-  role: 'seller';
-  landName: string;
-  landLocation: string;
-  landAreaHectares: number;
-  geotagLatitude: number;
-  geotagLongitude: number;
-  geotagPhotoName: string;
-  simplisiaOffered: string[];
-  cultivationMethod: string;
-  monthlyCapacityKg: number;
-  businessLicenseNotes: string;
-}
-
-export interface BuyerKycProfile extends BaseKycProfile {
-  role: 'buyer';
-  simplisiaNeeded: string[];
-  purchaseVolumeKg: number;
-  preferredOrigin: string;
-  qualityRequirements: string;
-  importDestination: string;
-}
-
-export type KycProfile = SellerKycProfile | BuyerKycProfile;
+export type UserRole = Database["public"]["Enums"]["app_role"];
+export type KycStatus = Database["public"]["Enums"]["kyc_status"];
 
 export interface User {
+  id: string;
   name: string;
   email: string;
-  company: string;
-  country: string;
-  role: UserRole;
+  company?: string;
+  country?: string;
   kycStatus: KycStatus;
-  kycProfile?: KycProfile;
+  roles: UserRole[];
 }
 
-const AUTH_KEY = 'herblocx_user';
-
-const normalizeUser = (rawUser: Partial<User>): User => {
-  const role = rawUser.role ?? 'general';
-  const hasLegacyTradeRole = role === 'buyer' || role === 'seller';
-
-  return {
-    name: rawUser.name || rawUser.email?.split('@')[0] || 'HerBlocX User',
-    email: rawUser.email || '',
-    company: rawUser.company || 'HerBlocX User',
-    country: rawUser.country || 'Indonesia',
-    role,
-    kycStatus: rawUser.kycStatus || (hasLegacyTradeRole ? 'verified' : 'not_started'),
-    kycProfile: rawUser.kycProfile,
-  };
-};
-
 export const authService = {
-  login: (user: User) => {
-    localStorage.setItem(AUTH_KEY, JSON.stringify(normalizeUser(user)));
-  },
-
-  logout: () => {
-    localStorage.removeItem(AUTH_KEY);
-  },
-
-  getUser: (): User | null => {
-    const data = localStorage.getItem(AUTH_KEY);
-    if (!data) return null;
-
-    try {
-      return normalizeUser(JSON.parse(data));
-    } catch (error) {
-      localStorage.removeItem(AUTH_KEY);
-      return null;
-    }
-  },
-
-  updateUser: (updates: Partial<User>): User | null => {
-    const currentUser = authService.getUser();
-    if (!currentUser) return null;
-
-    const updatedUser = normalizeUser({ ...currentUser, ...updates });
-    localStorage.setItem(AUTH_KEY, JSON.stringify(updatedUser));
-    return updatedUser;
-  },
-
-  submitKyc: (role: TradeRole, profile: KycProfile): User | null => {
-    const currentUser = authService.getUser();
-    if (!currentUser) return null;
-
-    const updatedUser = normalizeUser({
-      ...currentUser,
-      role,
-      company: profile.businessEntityName || profile.legalName || currentUser.company,
-      kycStatus: 'pending',
-      kycProfile: profile,
+  async signUp(email: string, password: string, name: string, role: UserRole) {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { name, initial_role: role },
+      },
     });
 
-    localStorage.setItem(AUTH_KEY, JSON.stringify(updatedUser));
-    return updatedUser;
+    if (error) throw error;
+    return data;
   },
 
-  isAuthenticated: (): boolean => {
-    return !!authService.getUser();
+  async signIn(email: string, password: string) {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) throw error;
+    return data;
   },
 
-  getUserRole: (): UserRole | null => {
-    const user = authService.getUser();
-    return user?.role || null;
+  async signOut() {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
   },
 
-  isGeneralAccount: (): boolean => {
-    return authService.getUser()?.role === 'general';
-  },
+  async getCurrentUser(): Promise<User | null> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
 
-  hasSubmittedKyc: (role?: TradeRole): boolean => {
-    const user = authService.getUser();
-    if (!user || user.role === 'general') return false;
-    if (role && user.role !== role) return false;
-    return ['pending', 'verified'].includes(user.kycStatus);
-  },
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, name, email, company, country, kyc_status")
+      .eq("id", user.id)
+      .single();
 
-  canTransactAsBuyer: (): boolean => {
-    const user = authService.getUser();
-    return !!user && user.role === 'buyer' && ['pending', 'verified'].includes(user.kycStatus);
-  },
+    if (profileError) throw profileError;
 
-  canTransactAsSeller: (): boolean => {
-    const user = authService.getUser();
-    return !!user && user.role === 'seller' && ['pending', 'verified'].includes(user.kycStatus);
-  },
+    const { data: userRoles, error: rolesError } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id);
 
-  getKycStatusLabel: (status?: KycStatus): string => {
-    const labels: Record<KycStatus, string> = {
-      not_started: 'KYC not started',
-      draft: 'KYC draft',
-      pending: 'KYC submitted',
-      verified: 'KYC verified',
-      rejected: 'KYC rejected',
+    if (rolesError) throw rolesError;
+
+    return {
+      id: profile.id,
+      name: profile.name || user.email?.split("@")[0] || "HerBlocX User",
+      email: profile.email || user.email || "",
+      company: profile.company || "",
+      country: profile.country || "",
+      kycStatus: profile.kyc_status || "not_started",
+      roles: userRoles.map((r) => r.role),
     };
+  },
 
-    return labels[status || 'not_started'];
+  async updateProfile(updates: Partial<Omit<User, "id" | "email" | "roles" | "kycStatus">>) {
+    const user = await this.getCurrentUser();
+    if (!user) throw new Error("User not authenticated.");
+
+    const { error } = await supabase
+      .from("profiles")
+      .update(updates)
+      .eq("id", user.id);
+
+    if (error) throw error;
+  },
+
+  async hasRole(role: UserRole): Promise<boolean> {
+    const user = await this.getCurrentUser();
+    return user?.roles.includes(role) || false;
+  },
+
+  async isKycVerified(): Promise<boolean> {
+    const user = await this.getCurrentUser();
+    return user?.kycStatus === "verified" || false;
+  },
+
+  async submitKyc(role: UserRole, kycData: any) {
+    const user = await this.getCurrentUser();
+    if (!user) throw new Error("User not authenticated.");
+
+    // Update profile kyc_status
+    const { error: profileUpdateError } = await supabase
+      .from("profiles")
+      .update({ kyc_status: "pending" })
+      .eq("id", user.id);
+    if (profileUpdateError) throw profileUpdateError;
+
+    // Insert KYC data into appropriate table
+    if (role === "buyer") {
+      const { error: buyerKycError } = await supabase.from("buyer_kyc").insert({
+        user_id: user.id,
+        legal_name: kycData.legalName,
+        nib: kycData.nibNumber,
+        npwp: kycData.nikOrNpwp,
+        simplisia_needed: kycData.simplisiaNeeded,
+        purchase_volume_kg: kycData.purchaseVolumeKg,
+        preferred_origin: kycData.preferredOrigin,
+        import_destination: kycData.importDestination,
+      });
+      if (buyerKycError) throw buyerKycError;
+    } else if (role === "seller") {
+      const { error: sellerKycError } = await supabase.from("seller_kyc").insert({
+        user_id: user.id,
+        legal_name: kycData.legalName,
+        nib: kycData.nibNumber,
+        npwp: kycData.nikOrNpwp,
+        land_name: kycData.landName,
+        land_location: kycData.landLocation,
+        land_area_hectares: kycData.landAreaHectares,
+        geotag_lat: kycData.geotagLatitude,
+        geotag_lng: kycData.geotagLongitude,
+        simplisia_offered: kycData.simplisiaOffered,
+        cultivation_method: kycData.cultivationMethod,
+        monthly_capacity_kg: kycData.monthlyCapacityKg,
+      });
+      if (sellerKycError) throw sellerKycError;
+    }
+
+    // Add role to user_roles table
+    const { error: roleError } = await supabase.from("user_roles").insert({
+      user_id: user.id,
+      role: role,
+    });
+    if (roleError) throw roleError;
   },
 };

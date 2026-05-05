@@ -13,46 +13,50 @@ import { Web3Footer } from "@/components/Web3Footer";
 import { Web3Background } from "@/components/Web3Background";
 import { authService } from "@/lib/auth";
 import { toast } from "sonner";
+import { UserRole } from "@/lib/auth";
 
 const Register = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    role: "general" as UserRole,
   });
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
 
     if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
       toast.error("Please fill in all fields");
+      setLoading(false);
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
       toast.error("Passwords do not match");
+      setLoading(false);
       return;
     }
 
     if (formData.password.length < 6) {
       toast.error("Password must be at least 6 characters");
+      setLoading(false);
       return;
     }
 
-    const user = {
-      name: formData.name,
-      email: formData.email,
-      company: 'HerBlocX General Account',
-      country: 'Indonesia',
-      role: 'general' as const,
-      kycStatus: 'not_started' as const,
-    };
-
-    authService.login(user);
-    toast.success("General account created. Complete KYC when you are ready to trade.");
-    navigate('/kyc');
+    try {
+      await authService.signUp(formData.email, formData.password, formData.name, formData.role);
+      toast.success("Registration successful! Please check your email to verify your account.");
+      navigate("/login");
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGoogleLogin = () => {
@@ -143,8 +147,8 @@ const Register = () => {
                 />
               </div>
 
-              <Button type="submit" className="w-full btn-web3" size="lg">
-                Create General Account
+              <Button type="submit" className="w-full btn-web3" size="lg" disabled={loading}>
+                {loading ? "Registering..." : "Create General Account"}
               </Button>
 
               <div className="relative">
@@ -162,6 +166,7 @@ const Register = () => {
                   variant="outline"
                   onClick={handleGoogleLogin}
                   className="w-full glass border-border/50 hover:bg-primary/10"
+                  disabled={loading}
                 >
                   <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                     <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -177,6 +182,7 @@ const Register = () => {
                   variant="outline"
                   onClick={handleWalletLogin}
                   className="w-full glass border-border/50 hover:bg-primary/10"
+                  disabled={loading}
                 >
                   <Wallet className="mr-2 h-4 w-4" />
                   Crypto Wallet

@@ -1,138 +1,150 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Tables, Enums } from '@/integrations/supabase/types';
+import { useAuth } from './AuthContext';
 
-export interface Order {
-  id: string;
-  txHash: string;
-  blockNumber: number;
-  timestamp: string;
-  productName: string;
-  productId: string;
-  productImage: string;
-  quantity: string;
-  pricePerUnit: number;
-  totalAmount: number;
-  supplier: string;
-  buyer: string;
-  paymentMethod: string;
-  status: 'processing' | 'shipped' | 'delivered' | 'success';
-  date: string;
-  from: string;
-  to: string;
-  gasUsed: string;
-  gasPrice: string;
-}
+export type Order = Tables<'orders'> & {
+  product_name: string;
+  product_image: string;
+  buyer_name: string;
+  seller_name: string;
+};
 
 interface OrderContextType {
   orders: Order[];
-  addOrder: (order: Omit<Order, 'id' | 'date' | 'from' | 'to' | 'txHash' | 'blockNumber' | 'timestamp' | 'gasUsed' | 'gasPrice' | 'buyer'>) => Order;
-  updateOrderStatus: (id: string, status: Order['status']) => void;
-  clearOrders: () => void;
-  getOrderByTxHash: (txHash: string) => Order | undefined;
+  addOrder: (newOrderData: Omit<Tables<'orders'>, 'id' | 'created_at' | 'status' | 'buyer_id' | 'seller_id'> & { buyer_id: string; seller_id: string; }) => Promise<void>;
+  updateOrderStatus: (id: string, status: Enums<'order_status'>) => Promise<void>;
+  clearOrders: () => Promise<void>;
+  loading: boolean;
 }
 
 const OrderContext = createContext<OrderContextType | undefined>(undefined);
 
-const generateWalletAddress = () => {
-  const chars = '0123456789abcdef';
-  let addr = '0x';
-  for (let i = 0; i < 40; i++) {
-    addr += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return addr;
-};
-
-const generateTxHash = () => {
-  const chars = '0123456789abcdef';
-  let hash = '0x';
-  for (let i = 0; i < 64; i++) {
-    hash += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return hash;
-};
-
-const generateBlockNumber = () => {
-  return 19000000 + Math.floor(Math.random() * 500000);
-};
-
-// Migration function to update old orders with missing fields
-const migrateOrders = (oldOrders: any[]): Order[] => {
-  return oldOrders.map(order => ({
-    ...order,
-    txHash: order.txHash || generateTxHash(),
-    blockNumber: order.blockNumber || generateBlockNumber(),
-    timestamp: order.timestamp || order.date || new Date().toISOString(),
-    pricePerUnit: order.pricePerUnit || 0,
-    totalAmount: order.totalAmount || order.price || 0,
-    buyer: order.buyer || generateWalletAddress(),
-    from: order.from || generateWalletAddress(),
-    to: order.to || generateWalletAddress(),
-    gasUsed: order.gasUsed || (21000 + Math.floor(Math.random() * 50000)).toString(),
-    gasPrice: order.gasPrice || (20 + Math.floor(Math.random() * 30)).toString(),
-  }));
-};
-
 export const OrderProvider = ({ children }: { children: ReactNode }) => {
-  const [orders, setOrders] = useState<Order[]>(() => {
-    const saved = localStorage.getItem('herbal-orders');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      return migrateOrders(parsed);
-    }
-    return [];
-  });
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
-    localStorage.setItem('herbal-orders', JSON.stringify(orders));
-  }, [orders]);
+    const fetchOrders = async () => {
+      if (!user) {
+        setOrders([]);
+        setLoading(false);
+        return;
+      }
 
-  const addOrder = (order: Omit<Order, 'id' | 'date' | 'from' | 'to' | 'txHash' | 'blockNumber' | 'timestamp' | 'gasUsed' | 'gasPrice' | 'buyer'>): Order => {
-    const txHash = generateTxHash();
-    const fromAddr = generateWalletAddress();
-    const toAddr = generateWalletAddress();
-    const buyerAddr = generateWalletAddress();
-    
-    const newOrder: Order = {
-      ...order,
-      id: txHash.slice(0, 10) + '...' + txHash.slice(-8),
-      txHash: txHash,
-      blockNumber: generateBlockNumber(),
-      timestamp: new Date().toISOString(),
-      date: new Date().toISOString().split('T')[0],
-      from: fromAddr,
-      to: toAddr,
-      buyer: buyerAddr,
-      gasUsed: (21000 + Math.floor(Math.random() * 50000)).toString(),
-      gasPrice: (20 + Math.floor(Math.random() * 30)).toString(),
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          products(
+            name,
+            image_url
+          ),
+          buyer:profiles!orders_buyer_id_fkey(
+            name
+          ),
+          seller:profiles!orders_seller_id_fkey(
+            name
+          )
+        `)
+        .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`);
+
+      if (error) {
+        console.error('Error fetching orders:', error.message);
+        setLoading(false);
+        return;
+      }
+
+      const formattedOrders: Order[] = data.map((order: any) => ({
+        ...order,
+        product_name: order.products.name,
+        product_image: order.products.image_url,
+        buyer_name: order.buyer.name,
+        seller_name: order.seller.name,
+      }));
+      setOrders(formattedOrders);
+      setLoading(false);
     };
-    setOrders(prev => [newOrder, ...prev]);
-    return newOrder;
+
+    fetchOrders();
+
+    const channel = supabase
+      .channel('orders')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, payload => {
+        if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE' || payload.eventType === 'DELETE') {
+          fetchOrders(); // Re-fetch orders on any change for simplicity
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
+  const addOrder = async (newOrderData: Omit<Tables<'orders'>, 'id' | 'created_at' | 'status' | 'buyer_id' | 'seller_id'> & { buyer_id: string; seller_id: string; }) => {
+    if (!user) {
+      throw new Error('User not authenticated. Please log in to place an order.');
+    }
+
+    const { data, error } = await supabase
+      .from('orders')
+      .insert({ ...newOrderData, status: 'processing' })
+      .select(`
+        *,
+        products(
+          name,
+          image_url
+        ),
+        buyer:profiles!orders_buyer_id_fkey(
+          name
+        ),
+        seller:profiles!orders_seller_id_fkey(
+          name
+        )
+      `)
+      .single();
+
+    if (error) throw error;
+
+    const newOrder: Order = {
+      ...data,
+      product_name: data.products.name,
+      product_image: data.products.image_url,
+      buyer_name: data.buyer.name,
+      seller_name: data.seller.name,
+    };
+    setOrders((prev) => [newOrder, ...prev]);
   };
 
-  const updateOrderStatus = (id: string, status: Order['status']) => {
-    setOrders(prev => prev.map(order => 
-      order.id === id ? { ...order, status } : order
-    ));
+  const updateOrderStatus = async (id: string, status: Enums<'order_status'>) => {
+    if (!user) {
+      throw new Error('User not authenticated.');
+    }
+    const { error } = await supabase
+      .from('orders')
+      .update({ status })
+      .eq('id', id)
+      .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`);
+    if (error) throw error;
+    setOrders((prev) =>
+      prev.map((order) => (order.id === id ? { ...order, status } : order))
+    );
   };
 
-  const clearOrders = () => {
+  const clearOrders = async () => {
+    if (!user) {
+      throw new Error('User not authenticated.');
+    }
+    const { error } = await supabase.from('orders').delete().or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`);
+    if (error) throw error;
     setOrders([]);
   };
 
-  const getOrderByTxHash = (txHash: string): Order | undefined => {
-    return orders.find(order => {
-      if (order.txHash === txHash) return true;
-      if (order.txHash.toLowerCase().startsWith(txHash.toLowerCase().replace('...', ''))) return true;
-      if (txHash.includes('...')) {
-        const [start, end] = txHash.split('...');
-        return order.txHash.toLowerCase().startsWith(start.toLowerCase()) && 
-               order.txHash.toLowerCase().endsWith(end.toLowerCase());
-      }
-      return false;
-    });
-  };
-
   return (
-    <OrderContext.Provider value={{ orders, addOrder, updateOrderStatus, clearOrders, getOrderByTxHash }}>
+    <OrderContext.Provider value={{ orders, addOrder, updateOrderStatus, clearOrders, loading }}>
       {children}
     </OrderContext.Provider>
   );

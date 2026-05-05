@@ -45,18 +45,37 @@ import KYCOnboarding from "./pages/KYCOnboarding";
 import TransactionDetail from "./pages/TransactionDetail";
 import ProductRequest from "./pages/buyer/ProductRequest";
 import NotFound from "./pages/NotFound";
-import { authService, type TradeRole } from "@/lib/auth";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { UserRole } from "@/lib/auth";
 
 const queryClient = new QueryClient();
 
-const RequireRole = ({ role, children }: { role: TradeRole; children: ReactNode }) => {
-  const user = authService.getUser();
+const RequireRole = ({ role, children }: { role: UserRole; children: ReactNode }) => {
+  const { user, loading, isKycVerified, hasRole } = useAuth();
+  const [authorized, setAuthorized] = useState(false);
+
+  useEffect(() => {
+    const checkAuthorization = async () => {
+      if (!loading && user) {
+        const verified = await isKycVerified();
+        const hasRequiredRole = await hasRole(role);
+        setAuthorized(verified && hasRequiredRole);
+      } else if (!loading && !user) {
+        setAuthorized(false);
+      }
+    };
+    checkAuthorization();
+  }, [user, loading, role, isKycVerified, hasRole]);
+
+  if (loading) {
+    return <div>Loading authentication...</div>; // Or a more sophisticated loader
+  }
 
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  if (user.role !== role || !["pending", "verified"].includes(user.kycStatus)) {
+  if (!authorized) {
     return <Navigate to={`/kyc?role=${role}`} replace />;
   }
 
@@ -125,25 +144,27 @@ const App = () => {
   return (
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
-      <OrderProvider>
-        <CartProvider>
-          <BuyerRequestProvider>
-            <ComplianceProvider>
-              <CommunityProvider>
-              <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              {showLoader && <InitialLoader onComplete={handleLoaderComplete} />}
-              <BrowserRouter>
-                <ScrollToTop />
-                <AnimatedRoutes />
-              </BrowserRouter>
-              </TooltipProvider>
-            </CommunityProvider>
-            </ComplianceProvider>
-          </BuyerRequestProvider>
-        </CartProvider>
-      </OrderProvider>
+        <AuthProvider>
+          <OrderProvider>
+            <CartProvider>
+              <BuyerRequestProvider>
+                <ComplianceProvider>
+                  <CommunityProvider>
+                    <TooltipProvider>
+                      <Toaster />
+                      <Sonner />
+                      {showLoader && <InitialLoader onComplete={handleLoaderComplete} />}
+                      <BrowserRouter>
+                        <ScrollToTop />
+                        <AnimatedRoutes />
+                      </BrowserRouter>
+                    </TooltipProvider>
+                  </CommunityProvider>
+                </ComplianceProvider>
+              </BuyerRequestProvider>
+            </CartProvider>
+          </OrderProvider>
+        </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>
   );

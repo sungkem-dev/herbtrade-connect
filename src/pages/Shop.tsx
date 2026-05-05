@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { products, categories } from "@/lib/products";
+import { fetchProducts, Product, categories } from "@/lib/products";
 import { isProductInSeason, isProductInPeakSeason, getCurrentSeason, getSeasonalProductIds } from "@/lib/seasons";
 import { ShoppingCart, TrendingUp, TrendingDown, Coins, Clock, BarChart3, Verified, Package, Store, Leaf } from "lucide-react";
 import { toast } from "sonner";
@@ -18,7 +18,7 @@ import { SupplierTrendGraph } from "@/components/SupplierTrendGraph";
 import { ProductCardSkeleton, StatCardSkeleton } from "@/components/ui/loading-spinner";
 import { LivePriceTicker, LivePriceBadge } from "@/components/LivePriceTicker";
 import { useCart } from "@/contexts/CartContext";
-import { authService } from "@/lib/auth";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Mock price data for blockchain display
 const generateMockPriceChange = () => {
@@ -29,6 +29,8 @@ const generateMockPriceChange = () => {
 const Shop = () => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { user, loading: authLoading, isKycVerified, hasRole } = useAuth();
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [priceRange, setPriceRange] = useState([0, 500]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [showInStock, setShowInStock] = useState(false);
@@ -36,38 +38,49 @@ const Shop = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
-  // Simulate loading
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const getProducts = async () => {
+      setIsLoading(true);
+      const fetchedProducts = await fetchProducts();
+      setAllProducts(fetchedProducts);
       setIsLoading(false);
-    }, 1500);
-    return () => clearTimeout(timer);
+    };
+    getProducts();
   }, []);
 
-  const filteredProducts = products.filter(product => {
+  const filteredProducts = allProducts.filter(product => {
     const priceMatch = product.price >= priceRange[0] && product.price <= priceRange[1];
     const categoryMatch = selectedCategories.length === 0 || selectedCategories.includes(product.category);
-    const stockMatch = !showInStock || product.inStock;
-    const saleMatch = !showOnSale || product.onSale;
+    const stockMatch = !showInStock || product.in_stock;
+    const saleMatch = !showOnSale || product.on_sale;
     const searchMatch = searchQuery === "" || 
       product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.scientificName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.scientific_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       product.location.toLowerCase().includes(searchQuery.toLowerCase());
     return priceMatch && categoryMatch && stockMatch && saleMatch && searchMatch;
   });
 
-  const handleBuyerAction = (callback: () => void) => {
-    const user = authService.getUser();
-
+  const handleBuyerAction = async (callback: () => void) => {
     if (!user) {
-      toast.error("Please login first. General accounts can browse, but trading requires Buyer KYC.");
-      navigate('/login');
+      toast.error("Please login first. General accounts can browse, but trading requires Buyer KYC.", {
+        action: {
+          label: "Login",
+          onClick: () => navigate("/login"),
+        },
+      });
       return;
     }
 
-    if (!authService.canTransactAsBuyer()) {
-      toast.error("Complete Buyer KYC to create purchase requests or add products to your cart.");
-      navigate('/kyc?role=buyer');
+    const verified = await isKycVerified();
+    const isBuyer = await hasRole("buyer");
+
+    if (!verified || !isBuyer) {
+      toast.error("Complete Buyer KYC to create purchase requests or add products to your cart.", {
+        action: {
+          label: "Start Buyer KYC",
+          onClick: () => navigate("/kyc?role=buyer"),
+        },
+      });
       return;
     }
 
@@ -95,13 +108,13 @@ const Shop = () => {
         </div>
 
         {/* Live Price Ticker */}
-        <LivePriceTicker productIds={['CL001', 'AP001', 'CV001', 'PN001', 'MF001']} />
+        <LivePriceTicker productIds={allProducts.map(p => p.id)} />
 
         {/* Seasonal Banner */}
         {(() => {
           const currentSeason = getCurrentSeason();
           const seasonalIds = getSeasonalProductIds();
-          const seasonalProducts = products.filter(p => seasonalIds.includes(p.id));
+          const seasonalProducts = allProducts.filter(p => seasonalIds.includes(p.id));
           if (seasonalProducts.length === 0) return null;
           return (
             <Card className="glass-card border-primary/30 mb-8 overflow-hidden">
@@ -156,7 +169,7 @@ const Shop = () => {
                     <Coins className="h-4 w-4" />
                     Listed Items
                   </div>
-                  <p className="text-xl font-bold">{products.length} <span className="text-xs text-muted-foreground">Products</span></p>
+                  <p className="text-xl font-bold">{allProducts.length} <span className="text-xs text-muted-foreground">Products</span></p>
                 </CardContent>
               </Card>
               <Card className="glass-card border-border/50 animate-fade-in" style={{ animationDelay: '100ms' }}>
@@ -234,27 +247,23 @@ const Shop = () => {
                 </div>
 
                 <div className="border-t border-border/50 pt-6">
-                  <h3 className="font-semibold mb-4">Product Status</h3>
+                  <h3 className="font-semibold mb-4">Availability</h3>
                   <div className="space-y-3">
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         id="in-stock"
                         checked={showInStock}
-                        onCheckedChange={(checked) => setShowInStock(!!checked)}
+                        onCheckedChange={(checked: boolean) => setShowInStock(checked)}
                       />
-                      <Label htmlFor="in-stock" className="text-sm cursor-pointer">
-                        In Stock
-                      </Label>
+                      <Label htmlFor="in-stock" className="text-sm cursor-pointer">In Stock</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         id="on-sale"
                         checked={showOnSale}
-                        onCheckedChange={(checked) => setShowOnSale(!!checked)}
+                        onCheckedChange={(checked: boolean) => setShowOnSale(checked)}
                       />
-                      <Label htmlFor="on-sale" className="text-sm cursor-pointer">
-                        On Sale
-                      </Label>
+                      <Label htmlFor="on-sale" className="text-sm cursor-pointer">On Sale</Label>
                     </div>
                   </div>
                 </div>
@@ -262,193 +271,76 @@ const Shop = () => {
             </Card>
           </aside>
 
-          {/* Products Grid */}
-          <div className="lg:col-span-3">
-            <div className="flex justify-between items-center mb-6">
-              <p className="text-muted-foreground">
-                <span className="text-foreground font-semibold">{filteredProducts.length}</span> Items Listed
-              </p>
-              <Select defaultValue="latest">
-                <SelectTrigger className="w-[180px] glass border-border/50">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent className="glass">
-                  <SelectItem value="latest">Latest Listed</SelectItem>
-                  <SelectItem value="price-low">Price: Low to High</SelectItem>
-                  <SelectItem value="price-high">Price: High to Low</SelectItem>
-                  <SelectItem value="volume">Highest Volume</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {isLoading ? (
-                <>
-                  <ProductCardSkeleton />
-                  <ProductCardSkeleton />
-                  <ProductCardSkeleton />
-                  <ProductCardSkeleton />
-                  <ProductCardSkeleton />
-                  <ProductCardSkeleton />
-                </>
-              ) : (
-                productsWithBlockchainData.map((product, index) => (
-                  <Card 
-                    key={product.id} 
-                    className="glass-card border-border/50 card-hover animate-fade-in overflow-hidden"
-                    style={{ animationDelay: `${index * 50}ms` }}
-                  >
-                    <CardContent className="pt-0 px-0">
-                      {/* Image with overlay */}
-                      <div className="relative aspect-square bg-muted/50 flex items-center justify-center">
-                        <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
-                        
-                        {/* Price change badge */}
-                        <div className={`absolute top-3 right-3 px-2 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 ${
-                          product.priceChange >= 0 
-                            ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
-                            : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                        }`}>
-                          {product.priceChange >= 0 ? (
-                            <TrendingUp className="h-3 w-3" />
-                          ) : (
-                            <TrendingDown className="h-3 w-3" />
+          {/* Product Grid */}
+          <main className="lg:col-span-3">
+            {isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <ProductCardSkeleton />
+                <ProductCardSkeleton />
+                <ProductCardSkeleton />
+                <ProductCardSkeleton />
+                <ProductCardSkeleton />
+                <ProductCardSkeleton />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {productsWithBlockchainData.length > 0 ? (
+                  productsWithBlockchainData.map((product) => (
+                    <Card key={product.id} className="glass-card border-border/50 overflow-hidden group">
+                      <Link to={`/product/${product.id}`}>
+                        <div className="relative h-48 w-full overflow-hidden">
+                          <img
+                            src={product.image_url || "/placeholder.png"}
+                            alt={product.name}
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
+                          {product.on_sale && (
+                            <Badge className="absolute top-2 left-2 bg-accent/80 text-accent-foreground">On Sale</Badge>
                           )}
-                          {product.priceChange >= 0 ? '+' : ''}{product.priceChange}%
-                        </div>
-
-                        {/* Verified badge */}
-                        {product.inStock && (
-                          <div className="absolute top-3 left-3 px-2 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 bg-primary/20 text-primary border border-primary/30">
-                            <Verified className="h-3 w-3" />
-                            Verified
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Product Info */}
-                      <div className="p-4 space-y-3">
-                        <div>
-                          <h3 className="font-semibold text-lg">{product.name}</h3>
-                          <p className="text-sm text-muted-foreground italic">{product.scientificName}</p>
-                        </div>
-
-                        {/* Supplier Info */}
-                        <Link 
-                          to={`/supplier/${product.supplier.id}`}
-                          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
-                        >
-                          <span>by</span>
-                          <span className="text-foreground font-medium hover:text-primary">{product.supplier.name}</span>
-                          {product.supplier.verified && (
-                            <Verified className="h-3 w-3 text-primary" />
+                          {!product.in_stock && (
+                            <Badge className="absolute top-2 right-2 bg-red-500/80 text-white">Out of Stock</Badge>
                           )}
-                        </Link>
-
-                        {/* Blockchain Price Display */}
-                        <div className="glass p-3 rounded-lg border border-border/50">
+                        </div>
+                        <CardContent className="p-4">
+                          <h3 className="text-lg font-semibold mb-1 group-hover:text-primary transition-colors">
+                            {product.name}
+                          </h3>
+                          <p className="text-sm text-muted-foreground italic mb-2">{product.scientific_name}</p>
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs text-muted-foreground">Current Price</span>
-                            <span className="text-xs text-muted-foreground flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              {product.lastTrade}m ago
-                            </span>
+                            <span className="text-xl font-bold text-primary">${product.price.toFixed(2)}</span>
+                            <LivePriceBadge productId={product.id} />
                           </div>
-                          <div className="flex items-baseline gap-2">
-                            <span className="text-2xl font-bold text-primary font-mono">
-                              {product.usdtPrice.toFixed(2)}
-                            </span>
-                            <span className="text-sm text-primary">USD</span>
+                          <div className="flex items-center text-sm text-muted-foreground">
+                            <MapPin className="h-4 w-4 mr-1" /> {product.location}
                           </div>
-                          <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/50">
-                            <span className="text-xs text-muted-foreground">24h Vol</span>
-                            <span className="text-xs font-mono">{product.volume24h} USD</span>
+                          <div className="flex items-center text-sm text-muted-foreground mt-1">
+                            <Store className="h-4 w-4 mr-1" /> {product.supplier_name}
+                            {product.supplier_verified && <Verified className="h-4 w-4 ml-1 text-blue-500" title="Verified Supplier" />}
                           </div>
-                        </div>
-
-                        {/* Minimum Order */}
-                        <div className="text-sm font-medium text-accent">
-                          Min. Order: {product.minOrder.quantity.toLocaleString()} {product.minOrder.unit}
-                        </div>
-
-                        {/* Location */}
-                        <p className="text-xs text-muted-foreground flex items-center gap-1">
-                          📍 {product.location}
-                        </p>
-
-                        {product.onSale && (
-                          <div className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-accent/20 text-accent border border-accent/30">
-                            🔥 Hot Deal
-                          </div>
-                        )}
-
-                        {isProductInSeason(product.id) && (
-                          <div className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-primary/20 text-primary border border-primary/30">
-                            🌿 In Season {isProductInPeakSeason(product.id) ? '(Peak)' : ''}
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                    <CardFooter className="gap-2 px-4 pb-4">
-                      <Link to={`/product/${product.id}`} className="flex-1">
-                        <Button variant="outline" className="w-full glass border-border/50 hover:bg-primary/10">
-                          View Details
-                        </Button>
+                        </CardContent>
                       </Link>
-                      <Link to={`/supplier/${product.supplier.id}`}>
-                        <Button variant="outline" size="icon" className="glass border-border/50 hover:bg-primary/10">
-                          <Package className="h-4 w-4" />
+                      <CardFooter className="p-4 pt-0">
+                        <Button
+                          className="w-full btn-web3"
+                          onClick={() => handleBuyerAction(() => addToCart(product.id, product.min_order_qty || 1))}
+                          disabled={!product.in_stock}
+                        >
+                          <ShoppingCart className="h-4 w-4 mr-2" /> Add to Cart
                         </Button>
-                      </Link>
-                      <Button size="icon" className="btn-web3" onClick={() => handleBuyerAction(() => {
-                        addToCart({
-                          productId: product.id,
-                          productName: product.name,
-                          scientificName: product.scientificName,
-                          quantity: "1 kg",
-                          price: product.usdtPrice,
-                          supplier: product.supplier.name,
-                          supplierId: product.supplier.id,
-                          image: product.image
-                        });
-                        toast.success(`Added ${product.name} to cart!`);
-                        navigate('/buyer/requests');
-                      })}>
-                        <ShoppingCart className="h-4 w-4" />
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                ))
-              )}
-            </div>
-          </div>
+                      </CardFooter>
+                    </Card>
+                  ))
+                ) : (
+                  <div className="col-span-full text-center py-10">
+                    <p className="text-muted-foreground">No products found matching your criteria.</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </main>
         </div>
 
-        {/* Supplier Trend Graph */}
         <SupplierTrendGraph />
-
-        {/* Supplier Navigation */}
-        <Card className="glass-card border-border/50 mt-8">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-primary/20 rounded-lg">
-                  <Store className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg">Explore Suppliers</h3>
-                  <p className="text-sm text-muted-foreground">View all verified suppliers and their products</p>
-                </div>
-              </div>
-              <Link to="/suppliers">
-                <Button className="btn-web3">
-                  <Store className="h-4 w-4 mr-2" />
-                  View Suppliers
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       <Web3Footer />

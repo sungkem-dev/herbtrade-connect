@@ -1,5 +1,4 @@
 import { useParams, Link } from "react-router-dom";
-import { products } from "@/lib/products";
 import { Web3Header } from "@/components/Web3Header";
 import { Web3Footer } from "@/components/Web3Footer";
 import { Web3Background } from "@/components/Web3Background";
@@ -9,13 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { 
-  Star, 
-  MapPin, 
-  ShieldCheck, 
-  Package, 
-  TrendingUp, 
-  Clock, 
+import {
+  Star,
+  MapPin,
+  ShieldCheck,
+  Package,
+  TrendingUp,
+  Clock,
   MessageCircle,
   Award,
   Users,
@@ -25,98 +24,132 @@ import {
 } from "lucide-react";
 import { PageLoader, ProductCardSkeleton } from "@/components/ui/loading-spinner";
 import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Tables, Enums } from "@/integrations/supabase/types";
+import { Product, ProductReview } from "@/lib/products";
+import { Order } from "@/contexts/OrderContext";
 
-// Mock supplier detailed data
-const getSupplierDetails = (supplierId: string) => {
-  const mockSuppliers: Record<string, any> = {
-    'SUP001': {
-      id: 'SUP001',
-      name: 'Java Herbs Co.',
-      location: 'Malang, East Java',
-      rating: 4.8,
-      totalSales: 1250,
-      verified: true,
-      description: 'Premium herbal supplier specializing in turmeric and traditional Javanese herbs. Established in 2015 with a commitment to quality and sustainability.',
-      avatar: '/turmeric.jpg',
-      memberSince: '2015',
-      responseTime: '< 2 hours',
-      completionRate: 98,
-      onTimeDelivery: 96,
-      qualityScore: 4.9,
-      certifications: ['ISO9001', 'GMP', 'Organic', 'Halal'],
-      badges: ['Top Rated', 'Fast Responder', 'Verified Seller'],
-    },
-    'SUP002': {
-      id: 'SUP002',
-      name: 'West Java Botanics',
-      location: 'Bogor, West Java',
-      rating: 4.7,
-      totalSales: 890,
-      verified: true,
-      description: 'Specializing in medicinal herbs from the highlands of West Java. Known for high-quality Andrographis and other immune-boosting herbs.',
-      avatar: '/andrographis.jpg',
-      memberSince: '2017',
-      responseTime: '< 4 hours',
-      completionRate: 95,
-      onTimeDelivery: 94,
-      qualityScore: 4.7,
-      certifications: ['ISO9001', 'GMP', 'BPOM'],
-      badges: ['Verified Seller', 'Quality Assured'],
-    },
-    'SUP003': {
-      id: 'SUP003',
-      name: 'Central Java Herbs',
-      location: 'Semarang, Middle Java',
-      rating: 4.9,
-      totalSales: 1100,
-      verified: true,
-      description: 'Family-owned business with three generations of herbal expertise. We provide premium Ceylon cinnamon and traditional spices.',
-      avatar: '/cinnamon.jpg',
-      memberSince: '2010',
-      responseTime: '< 1 hour',
-      completionRate: 99,
-      onTimeDelivery: 98,
-      qualityScore: 4.9,
-      certifications: ['ISO9001', 'Organic', 'Halal', 'Fair Trade'],
-      badges: ['Top Rated', 'Fast Responder', 'Verified Seller', 'Premium'],
-    },
-  };
-  return mockSuppliers[supplierId] || mockSuppliers['SUP001'];
+export type SupplierProfile = Tables<"profiles"> & {
+  products: Product[];
+  reviews: ProductReview[];
+  orders: Order[];
 };
-
-// Mock reviews data
-const mockReviews = [
-  { id: 1, buyer: 'PT. Herbal Indonesia', rating: 5, comment: 'Excellent quality products and fast delivery. Highly recommended!', date: '2024-01-15', product: 'Turmeric', verified: true },
-  { id: 2, buyer: 'Natural Foods Co.', rating: 5, comment: 'Great communication and the products exceeded our expectations.', date: '2024-01-10', product: 'Andrographis', verified: true },
-  { id: 3, buyer: 'Global Spice Trading', rating: 4, comment: 'Good quality overall. Minor delay in shipping but was resolved quickly.', date: '2024-01-05', product: 'Turmeric', verified: true },
-  { id: 4, buyer: 'Health Supplements Ltd.', rating: 5, comment: 'Consistent quality across multiple orders. Will continue to work with them.', date: '2023-12-28', product: 'Ceylon Cinnamon', verified: true },
-  { id: 5, buyer: 'Asian Botanics', rating: 4, comment: 'Good products, reasonable pricing. Packaging could be improved.', date: '2023-12-20', product: 'Turmeric', verified: false },
-];
-
-// Mock transaction history
-const mockTransactions = [
-  { id: 'TX001', date: '2024-01-18', product: 'Turmeric', quantity: '500 KG', value: '$4,995', status: 'completed', txHash: '0x7a3b...f2d1' },
-  { id: 'TX002', date: '2024-01-15', product: 'Andrographis', quantity: '200 KG', value: '$2,500', status: 'completed', txHash: '0x8b4c...e3f2' },
-  { id: 'TX003', date: '2024-01-12', product: 'Ceylon Cinnamon', quantity: '150 KG', value: '$2,398', status: 'completed', txHash: '0x9c5d...d4g3' },
-  { id: 'TX004', date: '2024-01-10', product: 'Turmeric', quantity: '1000 KG', value: '$9,990', status: 'processing', txHash: '0xa6e8...c5h4' },
-  { id: 'TX005', date: '2024-01-08', product: 'Black Pepper', quantity: '300 KG', value: '$5,625', status: 'completed', txHash: '0xb7f9...b6i5' },
-];
 
 const Supplier = () => {
   const { id } = useParams();
+  const [supplier, setSupplier] = useState<SupplierProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 1000);
-    return () => clearTimeout(timer);
-  }, []);
+    const fetchSupplierData = async () => {
+      if (!id) return;
 
-  const supplier = getSupplierDetails(id || 'SUP001');
-  const supplierProducts = products.filter(p => p.supplier.id === id);
+      setIsLoading(true);
+      try {
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select(`
+            *,
+            products(
+              id,
+              name,
+              scientific_name,
+              price,
+              image_url,
+              category,
+              location,
+              in_stock,
+              on_sale,
+              min_order_qty,
+              min_order_unit
+            ),
+            reviews:product_reviews(
+              *,
+              reviewer:profiles!product_reviews_user_id_fkey(
+                name
+              )
+            ),
+            orders:orders!orders_seller_id_fkey(
+              id,
+              created_at,
+              total_amount,
+              status,
+              products(
+                name
+              )
+            )
+          `)
+          .eq("id", id)
+          .single();
+
+        if (profileError) throw profileError;
+
+        const formattedSupplier: SupplierProfile = {
+          ...profileData,
+          products: profileData.products.map((p: any) => ({
+            ...p,
+            supplier_name: profileData.name,
+            supplier_location: profileData.country,
+            supplier_rating: 4.5, // Mock rating for now
+            supplier_total_sales: 0, // Mock for now
+            supplier_verified: profileData.kyc_status === "verified",
+            reviews: [], // Reviews are fetched separately for products
+          })),
+          reviews: profileData.reviews.map((r: any) => ({
+            ...r,
+            reviewer_name: r.reviewer?.name || "Anonymous",
+          })),
+          orders: profileData.orders.map((o: any) => ({
+            ...o,
+            product_name: o.products?.name || "Unknown Product",
+            product_image: "", // Not directly available here
+            buyer_name: "", // Not directly available here
+            seller_name: profileData.name,
+          })),
+        };
+
+        setSupplier(formattedSupplier);
+      } catch (error) {
+        console.error("Error fetching supplier data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSupplierData();
+  }, [id]);
 
   if (isLoading) {
     return <PageLoader />;
   }
+
+  if (!supplier) {
+    return (
+      <div className="min-h-screen flex flex-col gradient-bg relative overflow-hidden">
+        <Web3Background />
+        <Web3Header />
+        <div className="flex-1 flex items-center justify-center relative z-10">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold mb-4">Supplier Not Found</h1>
+            <Link to="/suppliers">
+              <Button className="btn-hero">Back to Suppliers</Button>
+            </Link>
+          </div>
+        </div>
+        <Web3Footer />
+      </div>
+    );
+  }
+
+  // Mock data for fields not yet in Supabase schema or not directly fetched
+  const mockSupplierDetails = {
+    responseTime: "< 2 hours",
+    completionRate: 98,
+    onTimeDelivery: 96,
+    qualityScore: 4.9,
+    certifications: ["ISO9001", "GMP", "Organic", "Halal"], // Placeholder
+    badges: ["Top Rated", "Fast Responder", "Verified Seller"], // Placeholder
+  };
 
   return (
     <div className="min-h-screen gradient-bg">
@@ -128,9 +161,9 @@ const Supplier = () => {
         <div className="glass-card p-8 mb-8">
           <div className="flex flex-col md:flex-row gap-8">
             <Avatar className="h-32 w-32 border-4 border-primary/30">
-              <AvatarImage src={supplier.avatar} />
+              <AvatarImage src={supplier.avatar_url || "/placeholder-avatar.png"} />
               <AvatarFallback className="bg-primary/20 text-primary text-3xl">
-                {supplier.name.slice(0, 2).toUpperCase()}
+                {supplier.name?.slice(0, 2).toUpperCase() || "NN"}
               </AvatarFallback>
             </Avatar>
 
@@ -139,7 +172,7 @@ const Supplier = () => {
                 <div>
                   <div className="flex items-center gap-3 mb-2">
                     <h1 className="text-3xl font-bold">{supplier.name}</h1>
-                    {supplier.verified && (
+                    {supplier.kyc_status === "verified" && (
                       <Badge className="bg-primary/20 text-primary border-primary/30">
                         <ShieldCheck className="h-3 w-3 mr-1" />
                         Verified
@@ -148,12 +181,12 @@ const Supplier = () => {
                   </div>
                   <div className="flex items-center gap-2 text-muted-foreground mb-4">
                     <MapPin className="h-4 w-4" />
-                    <span>{supplier.location}</span>
+                    <span>{supplier.country}</span>
                     <span className="mx-2">•</span>
                     <Calendar className="h-4 w-4" />
-                    <span>Member since {supplier.memberSince}</span>
+                    <span>Member since {new Date(supplier.created_at).getFullYear()}</span>
                   </div>
-                  <p className="text-muted-foreground max-w-2xl">{supplier.description}</p>
+                  <p className="text-muted-foreground max-w-2xl">{supplier.bio}</p>
                 </div>
 
                 <Button className="btn-hero">
@@ -164,7 +197,7 @@ const Supplier = () => {
 
               {/* Badges */}
               <div className="flex flex-wrap gap-2 mt-4">
-                {supplier.badges.map((badge: string) => (
+                {mockSupplierDetails.badges.map((badge: string) => (
                   <Badge key={badge} variant="outline" className="border-primary/30 text-primary">
                     <Award className="h-3 w-3 mr-1" />
                     {badge}
@@ -181,32 +214,32 @@ const Supplier = () => {
             <CardContent className="p-4 text-center">
               <div className="flex items-center justify-center gap-1 text-2xl font-bold text-primary">
                 <Star className="h-5 w-5 fill-primary" />
-                {supplier.rating}
+                {supplier.products.length > 0 ? (supplier.products.reduce((acc, p) => acc + p.reviews.reduce((rAcc, r) => rAcc + r.rating, 0) / p.reviews.length, 0) / supplier.products.length).toFixed(1) : "N/A"}
               </div>
               <p className="text-xs text-muted-foreground mt-1">Rating</p>
             </CardContent>
           </Card>
           <Card className="glass-card border-border/50">
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-foreground">{supplier.totalSales.toLocaleString()}</div>
+              <div className="text-2xl font-bold text-foreground">{supplier.orders.length}</div>
               <p className="text-xs text-muted-foreground mt-1">Total Sales</p>
             </CardContent>
           </Card>
           <Card className="glass-card border-border/50">
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-foreground">{supplier.responseTime}</div>
+              <div className="text-2xl font-bold text-foreground">{mockSupplierDetails.responseTime}</div>
               <p className="text-xs text-muted-foreground mt-1">Response Time</p>
             </CardContent>
           </Card>
           <Card className="glass-card border-border/50">
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-foreground">{supplier.completionRate}%</div>
+              <div className="text-2xl font-bold text-foreground">{mockSupplierDetails.completionRate}%</div>
               <p className="text-xs text-muted-foreground mt-1">Completion Rate</p>
             </CardContent>
           </Card>
           <Card className="glass-card border-border/50">
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-foreground">{supplier.onTimeDelivery}%</div>
+              <div className="text-2xl font-bold text-foreground">{mockSupplierDetails.onTimeDelivery}%</div>
               <p className="text-xs text-muted-foreground mt-1">On-Time Delivery</p>
             </CardContent>
           </Card>
@@ -222,7 +255,7 @@ const Supplier = () => {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-3">
-              {supplier.certifications.map((cert: string) => (
+              {mockSupplierDetails.certifications.map((cert: string) => (
                 <Badge key={cert} className="bg-primary/10 text-primary border-primary/30 px-4 py-2">
                   <CheckCircle2 className="h-4 w-4 mr-2" />
                   {cert}
@@ -237,50 +270,57 @@ const Supplier = () => {
           <TabsList className="glass border border-border/50">
             <TabsTrigger value="products" className="data-[state=active]:bg-primary/20">
               <Package className="h-4 w-4 mr-2" />
-              Products ({supplierProducts.length})
+              Products ({supplier.products.length})
             </TabsTrigger>
             <TabsTrigger value="reviews" className="data-[state=active]:bg-primary/20">
               <Star className="h-4 w-4 mr-2" />
-              Reviews ({mockReviews.length})
+              Reviews ({supplier.reviews.length})
             </TabsTrigger>
             <TabsTrigger value="transactions" className="data-[state=active]:bg-primary/20">
               <TrendingUp className="h-4 w-4 mr-2" />
-              Transaction History
+              Transaction History ({supplier.orders.length})
             </TabsTrigger>
           </TabsList>
 
           {/* Products Tab */}
           <TabsContent value="products">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {supplierProducts.length > 0 ? supplierProducts.map((product) => (
-                <Link key={product.id} to={`/product/${product.id}`}>
-                  <Card className="glass-card border-border/50 card-hover overflow-hidden">
-                    <div className="aspect-video relative">
-                      <img 
-                        src={product.image} 
-                        alt={product.name}
-                        className="w-full h-full object-cover"
-                      />
-                      {product.inStock && (
-                        <Badge className="absolute top-3 right-3 bg-primary/20 text-primary border-primary/30">
-                          In Stock
-                        </Badge>
-                      )}
-                    </div>
-                    <CardContent className="p-4">
-                      <h3 className="font-semibold text-lg mb-1">{product.name}</h3>
-                      <p className="text-sm text-muted-foreground mb-2">{product.scientificName}</p>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xl font-bold text-primary">${product.price.toFixed(2)}</span>
-                        <span className="text-xs text-muted-foreground">per KG</span>
+              {supplier.products.length > 0 ? (
+                supplier.products.map((product) => (
+                  <Card key={product.id} className="glass-card border-border/50 overflow-hidden group">
+                    <Link to={`/product/${product.id}`}>
+                      <div className="relative h-48 w-full overflow-hidden">
+                        <img
+                          src={product.image_url || "/placeholder.png"}
+                          alt={product.name}
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                        {product.on_sale && (
+                          <Badge className="absolute top-2 left-2 bg-accent/80 text-accent-foreground">On Sale</Badge>
+                        )}
+                        {!product.in_stock && (
+                          <Badge className="absolute top-2 right-2 bg-red-500/80 text-white">Out of Stock</Badge>
+                        )}
                       </div>
-                    </CardContent>
+                      <CardContent className="p-4">
+                        <h3 className="text-lg font-semibold mb-1 group-hover:text-primary transition-colors">
+                          {product.name}
+                        </h3>
+                        <p className="text-sm text-muted-foreground italic mb-2">{product.scientific_name}</p>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xl font-bold text-primary">${product.price.toFixed(2)}</span>
+                          {/* <LivePriceBadge productId={product.id} /> */}
+                        </div>
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <MapPin className="h-4 w-4 mr-1" /> {product.location}
+                        </div>
+                      </CardContent>
+                    </Link>
                   </Card>
-                </Link>
-              )) : (
-                <div className="col-span-full text-center py-12 text-muted-foreground">
-                  <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No products available from this supplier yet.</p>
+                ))
+              ) : (
+                <div className="col-span-full text-center py-10">
+                  <p className="text-muted-foreground">No products listed by this supplier.</p>
                 </div>
               )}
             </div>
@@ -288,124 +328,66 @@ const Supplier = () => {
 
           {/* Reviews Tab */}
           <TabsContent value="reviews">
-            <div className="space-y-4">
-              {/* Rating Overview */}
-              <Card className="glass-card border-border/50 mb-6">
-                <CardContent className="p-6">
-                  <div className="flex flex-col md:flex-row gap-8">
-                    <div className="text-center">
-                      <div className="text-5xl font-bold text-primary mb-2">{supplier.rating}</div>
-                      <div className="flex items-center justify-center gap-1 mb-2">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Star 
-                            key={star} 
-                            className={`h-5 w-5 ${star <= Math.round(supplier.rating) ? 'fill-primary text-primary' : 'text-muted-foreground'}`}
-                          />
-                        ))}
-                      </div>
-                      <p className="text-sm text-muted-foreground">{mockReviews.length} reviews</p>
-                    </div>
-                    <div className="flex-1 space-y-2">
-                      {[5, 4, 3, 2, 1].map((rating) => {
-                        const count = mockReviews.filter(r => r.rating === rating).length;
-                        const percentage = (count / mockReviews.length) * 100;
-                        return (
-                          <div key={rating} className="flex items-center gap-3">
-                            <span className="text-sm w-3">{rating}</span>
-                            <Star className="h-4 w-4 text-primary fill-primary" />
-                            <Progress value={percentage} className="flex-1 h-2" />
-                            <span className="text-sm text-muted-foreground w-8">{count}</span>
+            <div className="space-y-6">
+              {supplier.reviews.length > 0 ? (
+                supplier.reviews.map((review) => (
+                  <Card key={review.id} className="glass-card border-border/50">
+                    <CardContent className="p-6">
+                      <div className="flex items-center gap-3 mb-3">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={review.reviewer?.avatar_url || "/placeholder-avatar.png"} />
+                          <AvatarFallback>{review.reviewer_name?.slice(0, 2).toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-semibold">{review.reviewer_name}</p>
+                          <div className="flex items-center text-yellow-400 text-sm">
+                            {[...Array(review.rating)].map((_, i) => (
+                              <Star key={i} className="h-4 w-4 fill-current" />
+                            ))}
                           </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Review List */}
-              {mockReviews.map((review) => (
-                <Card key={review.id} className="glass-card border-border/50">
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-semibold">{review.buyer}</span>
-                          {review.verified && (
-                            <Badge variant="outline" className="text-xs border-primary/30 text-primary">
-                              <CheckCircle2 className="h-3 w-3 mr-1" />
-                              Verified Purchase
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <span>{review.product}</span>
-                          <span>•</span>
-                          <span>{review.date}</span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Star 
-                            key={star}
-                            className={`h-4 w-4 ${star <= review.rating ? 'fill-primary text-primary' : 'text-muted-foreground'}`}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                    <p className="text-muted-foreground">{review.comment}</p>
-                  </CardContent>
-                </Card>
-              ))}
+                      <p className="text-muted-foreground">{review.comment}</p>
+                      <p className="text-xs text-muted-foreground mt-2">Reviewed on {new Date(review.created_at).toLocaleDateString()}</p>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <div className="text-center py-10">
+                  <p className="text-muted-foreground">No reviews for this supplier yet.</p>
+                </div>
+              )}
             </div>
           </TabsContent>
 
-          {/* Transactions Tab */}
+          {/* Transaction History Tab */}
           <TabsContent value="transactions">
-            <Card className="glass-card border-border/50">
-              <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-border/50">
-                        <th className="text-left p-4 text-muted-foreground font-medium">Date</th>
-                        <th className="text-left p-4 text-muted-foreground font-medium">Product</th>
-                        <th className="text-left p-4 text-muted-foreground font-medium">Quantity</th>
-                        <th className="text-left p-4 text-muted-foreground font-medium">Value</th>
-                        <th className="text-left p-4 text-muted-foreground font-medium">Status</th>
-                        <th className="text-left p-4 text-muted-foreground font-medium">TX Hash</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {mockTransactions.map((tx) => (
-                        <tr key={tx.id} className="border-b border-border/30 hover:bg-primary/5">
-                          <td className="p-4">{tx.date}</td>
-                          <td className="p-4 font-medium">{tx.product}</td>
-                          <td className="p-4">{tx.quantity}</td>
-                          <td className="p-4 text-primary font-semibold">{tx.value}</td>
-                          <td className="p-4">
-                            <Badge className={tx.status === 'completed' ? 'status-success' : 'status-pending'}>
-                              {tx.status}
-                            </Badge>
-                          </td>
-                          <td className="p-4">
-                            <a 
-                              href={`https://etherscan.io/tx/${tx.txHash}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="font-mono text-sm text-primary hover:underline flex items-center gap-1"
-                            >
-                              {tx.txHash}
-                              <ExternalLink className="h-3 w-3" />
-                            </a>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+            <div className="space-y-4">
+              {supplier.orders.length > 0 ? (
+                supplier.orders.map((order) => (
+                  <Card key={order.id} className="glass-card border-border/50">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="font-semibold">Order ID: {order.id}</p>
+                        <Badge variant={order.status === "success" ? "default" : "secondary"}>
+                          {order.status}
+                        </Badge>
+                      </div>
+                      <p className="text-muted-foreground">Product: {order.product_name}</p>
+                      <p className="text-muted-foreground">Total Amount: ${order.total_amount?.toFixed(2)}</p>
+                      <p className="text-xs text-muted-foreground mt-2">Date: {new Date(order.created_at).toLocaleDateString()}</p>
+                      <Link to={`/transaction/${order.id}`} className="text-primary hover:underline text-sm mt-2 block">
+                        View Details <ExternalLink className="inline-block h-3 w-3 ml-1" />
+                      </Link>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <div className="text-center py-10">
+                  <p className="text-muted-foreground">No transaction history for this supplier.</p>
                 </div>
-              </CardContent>
-            </Card>
+              )}
+            </div>
           </TabsContent>
         </Tabs>
       </main>

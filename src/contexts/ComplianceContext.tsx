@@ -1,149 +1,189 @@
-import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from "react";
-import { createDefaultSellerProfile, createProductBatch, createVerificationEntry } from "@/lib/complianceUtils";
-import { buildJourneyUrl, generateQRCodeDataUrl } from "@/lib/qrCode";
-import type {
-  ComplianceContextState,
-  ProductBatch,
-  SellerAdministrativeProfile,
-  VerificationHistoryEntry,
-} from "@/types/compliance";
+import { createContext, ReactNode, useContext, useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Tables, Enums } from "@/integrations/supabase/types";
+import { useAuth } from "./AuthContext";
 
-interface ComplianceContextValue extends ComplianceContextState {
-  saveSellerProfile: (profile: SellerAdministrativeProfile) => void;
-  createBatch: (input: Partial<ProductBatch>) => Promise<ProductBatch>;
-  updateBatch: (batch: ProductBatch) => void;
+export type ProductBatch = Tables<"product_batches">;
+export type SellerAdministrativeProfile = Tables<"seller_admin_profiles">;
+export type VerificationHistoryEntry = Tables<"verification_history">;
+
+interface ComplianceContextType {
+  sellerProfile: SellerAdministrativeProfile | null;
+  batches: ProductBatch[];
+  verificationHistory: VerificationHistoryEntry[];
+  loading: boolean;
+  saveSellerProfile: (profile: Omit<SellerAdministrativeProfile, "id" | "user_id" | "created_at">) => Promise<void>;
+  createBatch: (input: Omit<ProductBatch, "id" | "created_at" | "tx_hash" | "qr_target_url" | "scan_count">) => Promise<void>;
+  updateBatch: (batch: ProductBatch) => Promise<void>;
   getBatchByCode: (batchCode: string) => ProductBatch | undefined;
-  recordVerification: (batch: ProductBatch, role: VerificationHistoryEntry["verifierRole"]) => VerificationHistoryEntry;
-  resetComplianceDemoData: () => void;
+  recordVerification: (batchId: string, verifierRole: Enums<"verifier_role">, complianceSummary?: string) => Promise<void>;
 }
 
-const STORAGE_KEY = "herblocx_compliance_state";
-
-const buildInitialState = (): ComplianceContextState => {
-  const profile = createDefaultSellerProfile();
-  const firstBatch = createProductBatch(profile, {
-    batchCode: "HBX-260501",
-    productName: "Premium Organic Ginger Simplisia",
-    simplisiaType: "Jahe",
-    quantityKg: 1200,
-    exportDestination: "European Union",
-    qrTargetUrl: typeof window === "undefined" ? "/journey/HBX-260501" : `${window.location.origin}/journey/HBX-260501`,
-  });
-
-  return {
-    sellerProfile: profile,
-    batches: [firstBatch],
-    verificationHistory: [],
-  };
-};
-
-const loadState = (): ComplianceContextState => {
-  const fallback = buildInitialState();
-
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (!saved) {
-      return fallback;
-    }
-
-    const parsed = JSON.parse(saved) as Partial<ComplianceContextState>;
-
-    return {
-      sellerProfile: parsed.sellerProfile ?? fallback.sellerProfile,
-      batches: parsed.batches?.length ? parsed.batches : fallback.batches,
-      verificationHistory: parsed.verificationHistory ?? [],
-    };
-  } catch (error) {
-    console.error("Failed to load compliance state", error);
-    return fallback;
-  }
-};
-
-const ComplianceContext = createContext<ComplianceContextValue | undefined>(undefined);
+const ComplianceContext = createContext<ComplianceContextType | undefined>(undefined);
 
 export const ComplianceProvider = ({ children }: { children: ReactNode }) => {
-  const [state, setState] = useState<ComplianceContextState>(loadState);
+  const [sellerProfile, setSellerProfile] = useState<SellerAdministrativeProfile | null>(null);
+  const [batches, setBatches] = useState<ProductBatch[]>([]);
+  const [verificationHistory, setVerificationHistory] = useState<VerificationHistoryEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [state]);
-
-  const saveSellerProfile = (profile: SellerAdministrativeProfile) => {
-    setState((previous) => ({
-      ...previous,
-      sellerProfile: {
-        ...profile,
-        completionStatus: "complete",
-        updatedAt: new Date().toISOString(),
-      },
-    }));
-  };
-
-  const createBatch = async (input: Partial<ProductBatch>) => {
-    if (!state.sellerProfile) {
-      throw new Error("Seller administrative profile must be completed before creating QR batch records.");
+  const fetchComplianceData = async () => {
+    if (!user) {
+      setSellerProfile(null);
+      setBatches([]);
+      setVerificationHistory([]);
+      setLoading(false);
+      return;
     }
 
-    const rawBatch = createProductBatch(state.sellerProfile, input);
-    const qrTargetUrl = buildJourneyUrl(rawBatch.batchCode);
-    const qrCodeDataUrl = await generateQRCodeDataUrl(qrTargetUrl);
-    const batch: ProductBatch = {
-      ...rawBatch,
-      qrTargetUrl,
-      qrCodeDataUrl,
-    };
+    setLoading(true);
+    try {
+      // Fetch seller profile
+      const { data: profileData, error: profileError } = await supabase
+        .from("seller_admin_profiles")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
 
-    setState((previous) => ({
-      ...previous,
-      batches: [batch, ...previous.batches.filter((existing) => existing.batchCode !== batch.batchCode)],
-    }));
+      if (profileError && profileError.code !== "PGRST116") {
+        // PGRST116 means no rows found, which is expected for new sellers
+        throw profileError;
+      }
+      setSellerProfile(profileData);
 
-    return batch;
+      // Fetch product batches
+      const { data: batchesData, error: batchesError } = await supabase
+        .from("product_batches")
+        .select("*"); // Assuming batches are public or RLS will handle visibility
+
+      if (batchesError) throw batchesError;
+      setBatches(batchesData);
+
+      // Fetch verification history
+      const { data: historyData, error: historyError } = await supabase
+        .from("verification_history")
+        .select("*"); // Assuming history is public or RLS will handle visibility
+
+      if (historyError) throw historyError;
+      setVerificationHistory(historyData);
+
+    } catch (error) {
+      console.error("Error fetching compliance data:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const updateBatch = (batch: ProductBatch) => {
-    setState((previous) => ({
-      ...previous,
-      batches: previous.batches.map((existing) => (existing.id === batch.id ? batch : existing)),
-    }));
+  useEffect(() => {
+    fetchComplianceData();
+
+    const profileChannel = supabase
+      .channel("seller_admin_profiles")
+      .on("postgres_changes", { event: "*", schema: "public", table: "seller_admin_profiles" }, () => fetchComplianceData())
+      .subscribe();
+
+    const batchesChannel = supabase
+      .channel("product_batches")
+      .on("postgres_changes", { event: "*", schema: "public", table: "product_batches" }, () => fetchComplianceData())
+      .subscribe();
+
+    const historyChannel = supabase
+      .channel("verification_history")
+      .on("postgres_changes", { event: "*", schema: "public", table: "verification_history" }, () => fetchComplianceData())
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(profileChannel);
+      supabase.removeChannel(batchesChannel);
+      supabase.removeChannel(historyChannel);
+    };
+  }, [user]);
+
+  const saveSellerProfile = async (profile: Omit<SellerAdministrativeProfile, "id" | "user_id" | "created_at">) => {
+    if (!user) throw new Error("User not authenticated.");
+
+    const { data, error } = await supabase
+      .from("seller_admin_profiles")
+      .upsert({ ...profile, user_id: user.id }, { onConflict: "user_id" })
+      .select()
+      .single();
+
+    if (error) throw error;
+    setSellerProfile(data);
+  };
+
+  const createBatch = async (input: Omit<ProductBatch, "id" | "created_at" | "tx_hash" | "qr_target_url" | "scan_count">) => {
+    if (!user) throw new Error("User not authenticated.");
+
+    const qrTargetUrl = `${window.location.origin}/journey/${input.batch_code}`;
+    const { data, error } = await supabase
+      .from("product_batches")
+      .insert({ ...input, qr_target_url: qrTargetUrl })
+      .select()
+      .single();
+
+    if (error) throw error;
+    setBatches((prev) => [data, ...prev]);
+  };
+
+  const updateBatch = async (batch: ProductBatch) => {
+    if (!user) throw new Error("User not authenticated.");
+
+    const { data, error } = await supabase
+      .from("product_batches")
+      .update(batch)
+      .eq("id", batch.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    setBatches((prev) => prev.map((b) => (b.id === batch.id ? data : b)));
   };
 
   const getBatchByCode = (batchCode: string) => {
-    return state.batches.find((batch) => batch.batchCode.toLowerCase() === batchCode.toLowerCase());
+    return batches.find((batch) => batch.batch_code.toLowerCase() === batchCode.toLowerCase());
   };
 
-  const recordVerification = (batch: ProductBatch, role: VerificationHistoryEntry["verifierRole"]) => {
-    const verification = createVerificationEntry(batch, role);
+  const recordVerification = async (batchId: string, verifierRole: Enums<"verifier_role">, complianceSummary?: string) => {
+    if (!user) throw new Error("User not authenticated.");
 
-    setState((previous) => ({
-      ...previous,
-      batches: previous.batches.map((existing) =>
-        existing.id === batch.id ? { ...existing, scanCount: existing.scanCount + 1 } : existing,
-      ),
-      verificationHistory: [verification, ...previous.verificationHistory],
-    }));
+    const { data, error } = await supabase
+      .from("verification_history")
+      .insert({ batch_id: batchId, verifier_role: verifierRole, compliance_summary: complianceSummary })
+      .select()
+      .single();
 
-    return verification;
+    if (error) throw error;
+    setVerificationHistory((prev) => [data, ...prev]);
+
+    // Increment scan_count on the product_batch
+    const currentBatch = batches.find(b => b.id === batchId);
+    if (currentBatch) {
+      await supabase
+        .from("product_batches")
+        .update({ scan_count: (currentBatch.scan_count || 0) + 1 })
+        .eq("id", batchId);
+    }
   };
 
-  const resetComplianceDemoData = () => {
-    setState(buildInitialState());
-  };
-
-  const value = useMemo<ComplianceContextValue>(
-    () => ({
-      ...state,
-      saveSellerProfile,
-      createBatch,
-      updateBatch,
-      getBatchByCode,
-      recordVerification,
-      resetComplianceDemoData,
-    }),
-    [state],
+  return (
+    <ComplianceContext.Provider
+      value={{
+        sellerProfile,
+        batches,
+        verificationHistory,
+        loading,
+        saveSellerProfile,
+        createBatch,
+        updateBatch,
+        getBatchByCode,
+        recordVerification,
+      }}
+    >
+      {children}
+    </ComplianceContext.Provider>
   );
-
-  return <ComplianceContext.Provider value={value}>{children}</ComplianceContext.Provider>;
 };
 
 export const useCompliance = () => {

@@ -1,65 +1,127 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Tables, Enums } from "@/integrations/supabase/types";
+import { useAuth } from "./AuthContext";
 
-export interface BuyerRequest {
-  id: string;
-  productName: string;
-  quantity: number;
-  unit: string;
-  budgetMin: number;
-  budgetMax: number;
-  description: string;
-  category: string;
-  status: 'open' | 'matched' | 'closed';
-  createdAt: string;
-  matchedSuppliers: { supplierId: string; supplierName: string; price: number }[];
-}
+export type BuyerRequest = Tables<"buyer_requests"> & {
+  buyer_name: string;
+};
 
 interface BuyerRequestContextType {
   requests: BuyerRequest[];
-  addRequest: (req: Omit<BuyerRequest, 'id' | 'status' | 'createdAt' | 'matchedSuppliers'>) => void;
-  removeRequest: (id: string) => void;
-  updateRequestStatus: (id: string, status: BuyerRequest['status']) => void;
+  addRequest: (newRequestData: Omit<Tables<"buyer_requests">, "id" | "created_at" | "status" | "buyer_id">) => Promise<void>;
+  removeRequest: (id: string) => Promise<void>;
+  updateRequestStatus: (id: string, status: Enums<"request_status">) => Promise<void>;
+  loading: boolean;
 }
 
 const BuyerRequestContext = createContext<BuyerRequestContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'herblocx_buyer_requests';
-
 export function BuyerRequestProvider({ children }: { children: ReactNode }) {
-  const [requests, setRequests] = useState<BuyerRequest[]>(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [requests, setRequests] = useState<BuyerRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(requests));
-  }, [requests]);
+    const fetchBuyerRequests = async () => {
+      if (!user) {
+        setRequests([]);
+        setLoading(false);
+        return;
+      }
 
-  const addRequest = (req: Omit<BuyerRequest, 'id' | 'status' | 'createdAt' | 'matchedSuppliers'>) => {
-    const newReq: BuyerRequest = {
-      ...req,
-      id: `REQ-${Date.now()}`,
-      status: 'open',
-      createdAt: new Date().toISOString(),
-      matchedSuppliers: [],
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("buyer_requests")
+        .select(`
+          *,
+          buyer:profiles!buyer_requests_buyer_id_fkey(
+            name
+          )
+        `)
+        .eq("buyer_id", user.id);
+
+      if (error) {
+        console.error("Error fetching buyer requests:", error.message);
+        setLoading(false);
+        return;
+      }
+
+      const formattedRequests: BuyerRequest[] = data.map((req: any) => ({
+        ...req,
+        buyer_name: req.buyer.name,
+      }));
+      setRequests(formattedRequests);
+      setLoading(false);
     };
-    setRequests(prev => [newReq, ...prev]);
+
+    fetchBuyerRequests();
+
+    const channel = supabase
+      .channel("buyer_requests")
+      .on("postgres_changes", { event: "*", schema: "public", table: "buyer_requests" }, (payload) => {
+        if (payload.eventType === "INSERT" || payload.eventType === "UPDATE" || payload.eventType === "DELETE") {
+          fetchBuyerRequests(); // Re-fetch requests on any change for simplicity
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
+  const addRequest = async (newRequestData: Omit<Tables<"buyer_requests">, "id" | "created_at" | "status" | "buyer_id">) => {
+    if (!user) {
+      throw new Error("User not authenticated. Please log in to create a buyer request.");
+    }
+
+    const { data, error } = await supabase
+      .from("buyer_requests")
+      .insert({ ...newRequestData, buyer_id: user.id, status: "open" })
+      .select(`
+        *,
+        buyer:profiles!buyer_requests_buyer_id_fkey(
+          name
+        )
+      `)
+      .single();
+
+    if (error) throw error;
+
+    const newRequest: BuyerRequest = {
+      ...data,
+      buyer_name: data.buyer.name,
+    };
+    setRequests((prev) => [newRequest, ...prev]);
   };
 
-  const removeRequest = (id: string) => {
-    setRequests(prev => prev.filter(r => r.id !== id));
+  const removeRequest = async (id: string) => {
+    if (!user) {
+      throw new Error("User not authenticated.");
+    }
+    const { error } = await supabase.from("buyer_requests").delete().eq("id", id).eq("buyer_id", user.id);
+    if (error) throw error;
+    setRequests((prev) => prev.filter((req) => req.id !== id));
   };
 
-  const updateRequestStatus = (id: string, status: BuyerRequest['status']) => {
-    setRequests(prev => prev.map(r => r.id === id ? { ...r, status } : r));
+  const updateRequestStatus = async (id: string, status: Enums<"request_status">) => {
+    if (!user) {
+      throw new Error("User not authenticated.");
+    }
+    const { error } = await supabase
+      .from("buyer_requests")
+      .update({ status })
+      .eq("id", id)
+      .eq("buyer_id", user.id);
+    if (error) throw error;
+    setRequests((prev) =>
+      prev.map((req) => (req.id === id ? { ...req, status } : req))
+    );
   };
 
   return (
-    <BuyerRequestContext.Provider value={{ requests, addRequest, removeRequest, updateRequestStatus }}>
+    <BuyerRequestContext.Provider value={{ requests, addRequest, removeRequest, updateRequestStatus, loading }}>
       {children}
     </BuyerRequestContext.Provider>
   );
