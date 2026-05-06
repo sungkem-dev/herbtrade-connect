@@ -80,17 +80,17 @@ export const ComplianceProvider = ({ children }: { children: ReactNode }) => {
     fetchComplianceData();
 
     const profileChannel = supabase
-      .channel("seller_admin_profiles")
+      .channel(`seller_admin_profiles-${Math.random().toString(36).slice(2,9)}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "seller_admin_profiles" }, () => fetchComplianceData())
       .subscribe();
 
     const batchesChannel = supabase
-      .channel("product_batches")
+      .channel(`product_batches-${Math.random().toString(36).slice(2,9)}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "product_batches" }, () => fetchComplianceData())
       .subscribe();
 
     const historyChannel = supabase
-      .channel("verification_history")
+      .channel(`verification_history-${Math.random().toString(36).slice(2,9)}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "verification_history" }, () => fetchComplianceData())
       .subscribe();
 
