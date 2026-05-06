@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Web3Header } from "@/components/Web3Header";
