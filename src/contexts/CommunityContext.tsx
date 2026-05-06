@@ -110,18 +110,19 @@ export const CommunityProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     fetchCommunityData();
 
+    const suffix = Math.random().toString(36).slice(2, 9);
     const postsChannel = supabase
-      .channel("posts")
+      .channel(`posts-${suffix}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "posts" }, () => fetchCommunityData())
       .subscribe();
 
     const commentsChannel = supabase
-      .channel("comments")
+      .channel(`comments-${suffix}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "comments" }, () => fetchCommunityData())
       .subscribe();
 
     const postLikesChannel = supabase
-      .channel("post_likes")
+      .channel(`post_likes-${suffix}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "post_likes" }, () => fetchCommunityData())
       .subscribe();
 
