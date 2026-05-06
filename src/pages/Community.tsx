@@ -29,13 +29,13 @@ import {
   ChevronUp
 } from "lucide-react";
 import { useCommunity, Comment } from "@/contexts/CommunityContext";
-import { authService } from "@/lib/auth";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 
 const Community = () => {
   const { posts, addPost, likePost, deletePost, addComment, likeComment, deleteComment, getCommentsForPost } = useCommunity();
-  const user = authService.getUser();
+  const { user } = useAuth();
   const [newPostContent, setNewPostContent] = useState("");
   const [selectedMedia, setSelectedMedia] = useState<{ type: 'image' | 'video'; url: string } | null>(null);
   const [activeTab, setActiveTab] = useState("for-you");
