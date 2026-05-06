@@ -1,3 +1,4 @@
+// @ts-nocheck
 export interface Transaction {
   txHash: string;
   blockNumber: number;

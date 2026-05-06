@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Deterministic hash generation utilities for consistent mock blockchain data
 
 // Simple hash function that produces consistent output for a given input

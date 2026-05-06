@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { FormEvent, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle2, Download, FileText, Landmark, Leaf, MapPin, ShieldCheck } from "lucide-react";

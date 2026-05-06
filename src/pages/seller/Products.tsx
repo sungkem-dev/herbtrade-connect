@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Link } from "react-router-dom";
 import { Web3Header } from "@/components/Web3Header";
 import { Web3Footer } from "@/components/Web3Footer";

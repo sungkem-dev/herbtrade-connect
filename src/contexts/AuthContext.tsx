@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     return () => {
-      authListener.unsubscribe();
+      authListener.subscription.unsubscribe();
     };
   }, []);
 
