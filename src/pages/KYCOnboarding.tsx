@@ -32,8 +32,8 @@ const splitValues = (value: string) =>
 const buildSellerComplianceProfile = (seller: SellerKycProfile): SellerAdministrativeProfile => {
   const seed = `${seller.nibNumber}-${seller.legalName}-${seller.landName}`;
   const simplisiaTypes = seller.simplisiaOffered.length
-    ? seller.simplisiaOffered.map((item) => (simplisiaOptions.includes(item as SimplisiaType) ? (item as SimplisiaType) : "Other"))
-    : ["Jahe"];
+    ? seller.simplisiaOffered.map((item) => (simplisiaOptions.includes(item as SimplisiaType) ? (item as SimplisiaType) : "Other" as SimplisiaType))
+    : ["Jahe" as SimplisiaType];
   const farmerIdentity = createFarmerIdentity({
     farmerName: seller.legalName,
     identityNumber: seller.nikOrNpwp,
