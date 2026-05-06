@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, LogOut, User } from "lucide-react";
 import { authService } from "@/lib/auth";
+import { useAuth } from "@/contexts/AuthContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   DropdownMenu,
@@ -18,8 +19,14 @@ export const Web3Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const user = authService.getUser();
-  const dashboardPath = user?.role === "seller" ? "/seller/dashboard" : user?.role === "buyer" ? "/buyer/dashboard" : "/kyc";
+  const { user: authUser } = useAuth();
+  const role = authUser?.roles?.includes("seller")
+    ? "seller"
+    : authUser?.roles?.includes("buyer")
+    ? "buyer"
+    : "general";
+  const user = authUser ? { ...authUser, role } : null;
+  const dashboardPath = role === "seller" ? "/seller/dashboard" : role === "buyer" ? "/buyer/dashboard" : "/kyc";
 
   useEffect(() => {
     const handleScroll = () => {
