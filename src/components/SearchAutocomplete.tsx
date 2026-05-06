@@ -1,8 +1,18 @@
 import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Search, TrendingUp, Clock, X } from "lucide-react";
-import { products, Product } from "@/lib/products";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+
+interface SearchProduct {
+  id: string;
+  name: string;
+  scientific_name: string | null;
+  price: number;
+  image_url: string | null;
+  category: string | null;
+  location: string | null;
+}
 
 interface SearchAutocompleteProps {
   onSearch?: (query: string) => void;
@@ -12,37 +22,43 @@ interface SearchAutocompleteProps {
 export const SearchAutocomplete = ({ onSearch, placeholder = "Search products, suppliers..." }: SearchAutocompleteProps) => {
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
-  const [suggestions, setSuggestions] = useState<Product[]>([]);
+  const [allProducts, setAllProducts] = useState<SearchProduct[]>([]);
+  const [suggestions, setSuggestions] = useState<SearchProduct[]>([]);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  // Popular searches mock data
   const popularSearches = ["Turmeric", "Cinnamon", "Andrographis", "Black Pepper", "Nutmeg"];
 
   useEffect(() => {
-    // Load recent searches from localStorage
-    const saved = localStorage.getItem('recentSearches');
-    if (saved) {
-      setRecentSearches(JSON.parse(saved));
-    }
+    const saved = localStorage.getItem("recentSearches");
+    if (saved) setRecentSearches(JSON.parse(saved));
+
+    (async () => {
+      const { data } = await supabase
+        .from("products" as any)
+        .select("id, name, scientific_name, price, image_url, category, location");
+      if (data) setAllProducts(data as unknown as SearchProduct[]);
+    })();
   }, []);
 
   useEffect(() => {
     if (query.length > 0) {
-      const filtered = products.filter(
-        (product) =>
-          product.name.toLowerCase().includes(query.toLowerCase()) ||
-          product.scientificName.toLowerCase().includes(query.toLowerCase()) ||
-          product.category.toLowerCase().includes(query.toLowerCase()) ||
-          product.location.toLowerCase().includes(query.toLowerCase())
+      const q = query.toLowerCase();
+      setSuggestions(
+        allProducts.filter(
+          (p) =>
+            p.name.toLowerCase().includes(q) ||
+            (p.scientific_name ?? "").toLowerCase().includes(q) ||
+            (p.category ?? "").toLowerCase().includes(q) ||
+            (p.location ?? "").toLowerCase().includes(q)
+        )
       );
-      setSuggestions(filtered);
     } else {
       setSuggestions([]);
     }
-  }, [query]);
+  }, [query, allProducts]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -55,32 +71,28 @@ export const SearchAutocomplete = ({ onSearch, placeholder = "Search products, s
         setIsOpen(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const handleSearch = (searchQuery: string) => {
     if (!searchQuery.trim()) return;
-
-    // Save to recent searches
-    const updated = [searchQuery, ...recentSearches.filter(s => s !== searchQuery)].slice(0, 5);
+    const updated = [searchQuery, ...recentSearches.filter((s) => s !== searchQuery)].slice(0, 5);
     setRecentSearches(updated);
-    localStorage.setItem('recentSearches', JSON.stringify(updated));
-
+    localStorage.setItem("recentSearches", JSON.stringify(updated));
     setQuery(searchQuery);
     setIsOpen(false);
     onSearch?.(searchQuery);
   };
 
-  const handleProductClick = (product: Product) => {
+  const handleProductClick = (product: SearchProduct) => {
     handleSearch(product.name);
     navigate(`/product/${product.id}`);
   };
 
   const clearRecentSearches = () => {
     setRecentSearches([]);
-    localStorage.removeItem('recentSearches');
+    localStorage.removeItem("recentSearches");
   };
 
   return (
@@ -94,7 +106,7 @@ export const SearchAutocomplete = ({ onSearch, placeholder = "Search products, s
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => setIsOpen(true)}
-          onKeyPress={(e) => e.key === 'Enter' && handleSearch(query)}
+          onKeyPress={(e) => e.key === "Enter" && handleSearch(query)}
           className="pl-12 pr-4 h-12 bg-muted/30 border-border/50 rounded-xl focus:border-primary/50 focus:ring-primary/20"
         />
         {query && (
@@ -112,7 +124,6 @@ export const SearchAutocomplete = ({ onSearch, placeholder = "Search products, s
           ref={dropdownRef}
           className="absolute top-full left-0 right-0 mt-2 bg-card border border-border/50 rounded-xl shadow-xl overflow-hidden z-50 glass-card"
         >
-          {/* Search Results */}
           {suggestions.length > 0 && (
             <div className="p-2">
               <p className="text-xs text-muted-foreground px-3 py-2">Products</p>
@@ -123,13 +134,13 @@ export const SearchAutocomplete = ({ onSearch, placeholder = "Search products, s
                   className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors text-left"
                 >
                   <img
-                    src={product.image}
+                    src={product.image_url ?? "/placeholder.svg"}
                     alt={product.name}
                     className="h-10 w-10 rounded-lg object-cover"
                   />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">{product.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">{product.scientificName}</p>
+                    <p className="text-xs text-muted-foreground truncate">{product.scientific_name}</p>
                   </div>
                   <div className="text-right">
                     <p className="font-semibold text-sm text-primary">${product.price}</p>
@@ -140,15 +151,11 @@ export const SearchAutocomplete = ({ onSearch, placeholder = "Search products, s
             </div>
           )}
 
-          {/* Recent Searches */}
           {query.length === 0 && recentSearches.length > 0 && (
             <div className="p-2 border-b border-border/30">
               <div className="flex items-center justify-between px-3 py-2">
                 <p className="text-xs text-muted-foreground">Recent Searches</p>
-                <button
-                  onClick={clearRecentSearches}
-                  className="text-xs text-primary hover:underline"
-                >
+                <button onClick={clearRecentSearches} className="text-xs text-primary hover:underline">
                   Clear
                 </button>
               </div>
@@ -165,7 +172,6 @@ export const SearchAutocomplete = ({ onSearch, placeholder = "Search products, s
             </div>
           )}
 
-          {/* Popular Searches */}
           {query.length === 0 && (
             <div className="p-2">
               <p className="text-xs text-muted-foreground px-3 py-2">Trending</p>
@@ -184,7 +190,6 @@ export const SearchAutocomplete = ({ onSearch, placeholder = "Search products, s
             </div>
           )}
 
-          {/* No Results */}
           {query.length > 0 && suggestions.length === 0 && (
             <div className="p-6 text-center">
               <p className="text-muted-foreground">No products found for "{query}"</p>

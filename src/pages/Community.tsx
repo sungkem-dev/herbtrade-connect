@@ -90,7 +90,7 @@ const Community = () => {
         username: `@${user.name.toLowerCase().replace(/\s+/g, '')}`,
         avatar: user.role === 'seller' ? '/Topan.jpg' : '/dus.JPG',
         isVerified: user.role === 'seller',
-        role: user.role
+        role: user.role === 'seller' ? 'seller' : 'buyer'
       },
       content: newPostContent,
       media: selectedMedia || undefined
@@ -288,7 +288,7 @@ const Community = () => {
                               username: `@${user.name.toLowerCase().replace(/\s+/g, '')}`,
                               avatar: user.role === 'seller' ? '/Topan.jpg' : '/dus.JPG',
                               isVerified: user.role === 'seller',
-                              role: user.role
+                              role: user.role === 'seller' ? 'seller' : 'buyer'
                             },
                             content
                           });
@@ -318,7 +318,7 @@ const Community = () => {
                               username: `@${user.name.toLowerCase().replace(/\s+/g, '')}`,
                               avatar: user.role === 'seller' ? '/Topan.jpg' : '/dus.JPG',
                               isVerified: user.role === 'seller',
-                              role: user.role
+                              role: user.role === 'seller' ? 'seller' : 'buyer'
                             },
                             content
                           });
@@ -348,7 +348,7 @@ const Community = () => {
                               username: `@${user.name.toLowerCase().replace(/\s+/g, '')}`,
                               avatar: user.role === 'seller' ? '/Topan.jpg' : '/dus.JPG',
                               isVerified: user.role === 'seller',
-                              role: user.role
+                              role: user.role === 'seller' ? 'seller' : 'buyer'
                             },
                             content
                           });
