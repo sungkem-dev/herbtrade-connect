@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { useAuth } from './AuthContext'; // Assuming an AuthContext exists or will be created
 
-export type CartItem = Tables<'cart_items'> & { product_name: string; image_url: string; price: number; scientific_name: string; supplier_name: string; };
+export type CartItem = Partial<Tables<'cart_items'>> & { id: string; product_id: string; quantity: number; product_name: string; image_url: string; price: number; scientific_name: string; supplier_name: string; status?: string; created_at?: string; user_id?: string; };
 
 interface CartContextType {
   cartItems: CartItem[];
