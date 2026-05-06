@@ -59,10 +59,10 @@ export function BuyerRequestProvider({ children }: { children: ReactNode }) {
     fetchBuyerRequests();
 
     const channel = supabase
-      .channel("buyer_requests")
+      .channel(`buyer_requests-${Math.random().toString(36).slice(2, 9)}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "buyer_requests" }, (payload) => {
         if (payload.eventType === "INSERT" || payload.eventType === "UPDATE" || payload.eventType === "DELETE") {
-          fetchBuyerRequests(); // Re-fetch requests on any change for simplicity
+          fetchBuyerRequests();
         }
       })
       .subscribe();
