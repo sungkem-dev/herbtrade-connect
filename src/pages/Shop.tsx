@@ -11,7 +11,7 @@ import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { fetchProducts, Product, categories } from "@/lib/products";
 import { isProductInSeason, isProductInPeakSeason, getCurrentSeason, getSeasonalProductIds } from "@/lib/seasons";
-import { ShoppingCart, TrendingUp, TrendingDown, Coins, Clock, BarChart3, Verified, Package, Store, Leaf } from "lucide-react";
+import { ShoppingCart, TrendingUp, TrendingDown, Coins, Clock, BarChart3, Verified, Package, Store, Leaf, MapPin, Badge } from "lucide-react";
 import { toast } from "sonner";
 import { SearchAutocomplete } from "@/components/SearchAutocomplete";
 import { SupplierTrendGraph } from "@/components/SupplierTrendGraph";
@@ -25,6 +25,54 @@ const generateMockPriceChange = () => {
   const change = (Math.random() * 10 - 3).toFixed(2);
   return parseFloat(change);
 };
+
+// Mock seasonal products for fallback when database is empty
+const mockSeasonalProducts: Product[] = [
+  {
+    id: "CL001",
+    name: "Turmeric",
+    scientific_name: "Curcuma longa",
+    price: 12.50,
+    image_url: "/turmeric.jpg",
+    category: "East Java",
+    location: "Malang, East Java",
+    in_stock: true,
+    on_sale: false,
+    supplier_id: "SUP001",
+    supplier_name: "Java Herbs Co.",
+    supplier_location: "Malang, East Java",
+    supplier_rating: 4.8,
+    supplier_total_sales: 1250,
+    supplier_verified: true,
+    reviews: [],
+    min_order_qty: 10,
+    min_order_unit: "kg",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: "AP001",
+    name: "Andrographis",
+    scientific_name: "Andrographis paniculata",
+    price: 8.75,
+    image_url: "/andrographis.jpg",
+    category: "West Java",
+    location: "Bogor, West Java",
+    in_stock: true,
+    on_sale: true,
+    supplier_id: "SUP002",
+    supplier_name: "West Java Botanics",
+    supplier_location: "Bogor, West Java",
+    supplier_rating: 4.7,
+    supplier_total_sales: 890,
+    supplier_verified: true,
+    reviews: [],
+    min_order_qty: 5,
+    min_order_unit: "kg",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+];
 
 const Shop = () => {
   const navigate = useNavigate();
@@ -41,9 +89,18 @@ const Shop = () => {
   useEffect(() => {
     const getProducts = async () => {
       setIsLoading(true);
-      const fetchedProducts = await fetchProducts();
-      setAllProducts(fetchedProducts);
-      setIsLoading(false);
+      try {
+        const fetchedProducts = await fetchProducts();
+        // If no products from Supabase, use mock data with graceful fallback
+        setAllProducts(fetchedProducts.length > 0 ? fetchedProducts : mockSeasonalProducts);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        // Graceful fallback to mock data on error
+        setAllProducts(mockSeasonalProducts);
+        toast.error("Failed to load products. Showing sample data.");
+      } finally {
+        setIsLoading(false);
+      }
     };
     getProducts();
   }, []);
@@ -110,12 +167,15 @@ const Shop = () => {
         {/* Live Price Ticker */}
         <LivePriceTicker productIds={allProducts.map(p => p.id)} />
 
-        {/* Seasonal Banner */}
+        {/* Seasonal Banner - Always Rendered with Graceful Fallback */}
         {(() => {
           const currentSeason = getCurrentSeason();
           const seasonalIds = getSeasonalProductIds();
           const seasonalProducts = allProducts.filter(p => seasonalIds.includes(p.id));
-          if (seasonalProducts.length === 0) return null;
+          
+          // Always render the seasonal banner, even if empty - show empty state or mock data
+          const displayProducts = seasonalProducts.length > 0 ? seasonalProducts : mockSeasonalProducts.slice(0, 2);
+          
           return (
             <Card className="glass-card border-primary/30 mb-8 overflow-hidden">
               <CardContent className="pt-4 pb-4">
@@ -129,20 +189,27 @@ const Shop = () => {
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {seasonalProducts.map(p => (
-                    <Link key={p.id} to={`/product/${p.id}`}>
-                      <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-sm hover:bg-primary/20 transition-colors">
-                        <span className="font-medium">{p.name}</span>
-                        <span className="text-xs text-muted-foreground">${p.price}/kg</span>
-                        {isProductInPeakSeason(p.id) && <span className="text-xs text-primary font-semibold">🔥 Peak</span>}
-                      </div>
-                    </Link>
-                  ))}
+                  {displayProducts.length > 0 ? (
+                    displayProducts.map(p => (
+                      <Link key={p.id} to={`/product/${p.id}`}>
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-sm hover:bg-primary/20 transition-colors">
+                          <span className="font-medium">{p.name}</span>
+                          <span className="text-xs text-muted-foreground">${p.price}/kg</span>
+                          {isProductInPeakSeason(p.id) && <span className="text-xs text-primary font-semibold">🔥 Peak</span>}
+                        </div>
+                      </Link>
+                    ))
+                  ) : (
+                    <div className="w-full text-center py-2 text-muted-foreground text-sm">
+                      No seasonal products available. Browse all products below.
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
           );
         })()}
+        
         {/* Market Stats Header */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {isLoading ? (
@@ -295,10 +362,10 @@ const Shop = () => {
                             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                           />
                           {product.on_sale && (
-                            <Badge className="absolute top-2 left-2 bg-accent/80 text-accent-foreground">On Sale</Badge>
+                            <div className="absolute top-2 left-2 bg-accent/80 text-accent-foreground px-2 py-1 rounded text-xs font-semibold">On Sale</div>
                           )}
                           {!product.in_stock && (
-                            <Badge className="absolute top-2 right-2 bg-red-500/80 text-white">Out of Stock</Badge>
+                            <div className="absolute top-2 right-2 bg-red-500/80 text-white px-2 py-1 rounded text-xs font-semibold">Out of Stock</div>
                           )}
                         </div>
                         <CardContent className="p-4">
