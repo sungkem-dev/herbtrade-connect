@@ -228,9 +228,13 @@ const KYCOnboarding = () => {
       importDestination: buyerForm.importDestination,
     };
 
-    authService.submitKyc("buyer", buyerProfile);
-    toast.success("Buyer KYC submitted. Preferensi simplisia akan dipakai sebagai dasar rekomendasi dashboard.");
-    navigate("/buyer/dashboard");
+    try {
+      await authService.submitKyc("buyer", buyerProfile);
+      toast.success("Buyer KYC submitted. Preferensi simplisia akan dipakai sebagai dasar rekomendasi dashboard.");
+      navigate("/buyer/dashboard");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to submit Buyer KYC");
+    }
   };
 
   return (
