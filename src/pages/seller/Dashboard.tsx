@@ -12,9 +12,10 @@ import { DashboardSkeleton } from "@/components/DashboardSkeleton";
 import { PageTransition } from "@/components/PageTransition";
 import { Package, Plus, BarChart3, DollarSign, ShoppingCart, TrendingUp, Wallet, Building2, CreditCard, Smartphone, Bot, QrCode, ShieldCheck } from "lucide-react";
 import { authService } from "@/lib/auth";
+import { useAuth } from "@/contexts/AuthContext";
 
 const SellerDashboard = () => {
-  const user = authService.getUser();
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
