@@ -399,6 +399,7 @@ export type Database = {
         Row: {
           batch_code: string
           created_at: string
+          created_by: string | null
           eudr_data: Json | null
           export_destination: string | null
           farmer_id: string | null
@@ -420,6 +421,7 @@ export type Database = {
         Insert: {
           batch_code: string
           created_at?: string
+          created_by?: string | null
           eudr_data?: Json | null
           export_destination?: string | null
           farmer_id?: string | null
@@ -441,6 +443,7 @@ export type Database = {
         Update: {
           batch_code?: string
           created_at?: string
+          created_by?: string | null
           eudr_data?: Json | null
           export_destination?: string | null
           farmer_id?: string | null
