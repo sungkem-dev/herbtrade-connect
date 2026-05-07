@@ -26,8 +26,17 @@ const Login = () => {
     setLoading(true);
     try {
       await authService.signIn(formData.email, formData.password);
+      const currentUser = await authService.getCurrentUser();
       toast.success("Logged in successfully!");
-      navigate("/"); // Redirect to home or dashboard after login
+      if (!currentUser?.roles || currentUser.roles.length === 0) {
+        navigate("/kyc");
+      } else if (currentUser.roles.includes("seller")) {
+        navigate("/seller/dashboard");
+      } else if (currentUser.roles.includes("buyer")) {
+        navigate("/buyer/dashboard");
+      } else {
+        navigate("/");
+      }
     } catch (error: any) {
       toast.error(error.message);
     } finally {
