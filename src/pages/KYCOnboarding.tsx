@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { authService, type BuyerKycProfile, type LegalEntityType, type SellerKycProfile, type TradeRole } from "@/lib/auth";
+import { useAuth } from "@/contexts/AuthContext";
 import { createFarmerIdentity } from "@/lib/complianceUtils";
 import { hashFromSeed, numberFromSeed } from "@/lib/mockChain";
 import { useCompliance } from "@/contexts/ComplianceContext";
