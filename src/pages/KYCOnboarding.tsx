@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { authService, type BuyerKycProfile, type LegalEntityType, type SellerKycProfile, type TradeRole } from "@/lib/auth";
+import { useAuth } from "@/contexts/AuthContext";
 import { createFarmerIdentity } from "@/lib/complianceUtils";
 import { hashFromSeed, numberFromSeed } from "@/lib/mockChain";
 import { useCompliance } from "@/contexts/ComplianceContext";
@@ -77,7 +78,7 @@ const buildSellerComplianceProfile = (seller: SellerKycProfile): SellerAdministr
 const KYCOnboarding = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const currentUser = authService.getUser();
+  const { user: currentUser } = useAuth();
   const { saveSellerProfile } = useCompliance();
   const initialRole = (searchParams.get("role") === "seller" || searchParams.get("role") === "buyer" ? searchParams.get("role") : "seller") as TradeRole;
   const [selectedRole, setSelectedRole] = useState<TradeRole>(initialRole);
@@ -125,7 +126,7 @@ const KYCOnboarding = () => {
     }
 
     if (currentUser.kycStatus === "pending" || currentUser.kycStatus === "verified") {
-      return `${authService.getKycStatusLabel(currentUser.kycStatus)} sebagai ${currentUser.role.toUpperCase()}. Kamu masih bisa memperbarui data KYC jika diperlukan.`;
+      return `${authService.getKycStatusLabel(currentUser.kycStatus)} sebagai ${(currentUser.roles?.[0] || "general").toUpperCase()}. Kamu masih bisa memperbarui data KYC jika diperlukan.`;
     }
 
     return "Akun umum aktif. Kamu bisa melihat marketplace, komunitas, dan fitur umum; transaksi membutuhkan KYC role.";
@@ -140,7 +141,7 @@ const KYCOnboarding = () => {
     return true;
   };
 
-  const handleSellerSubmit = () => {
+  const handleSellerSubmit = async () => {
     if (!requireLogin()) return;
 
     const requiredFields = [
@@ -188,13 +189,17 @@ const KYCOnboarding = () => {
       businessLicenseNotes: sellerForm.businessLicenseNotes,
     };
 
-    authService.submitKyc("seller", sellerProfile);
-    saveSellerProfile(buildSellerComplianceProfile(sellerProfile));
-    toast.success("Seller KYC submitted. Data legalitas, lahan, geotag, dan simplisia kini menjadi template dokumen otomatis.");
-    navigate("/seller/dashboard");
+    try {
+      await authService.submitKyc("seller", sellerProfile);
+      await saveSellerProfile(buildSellerComplianceProfile(sellerProfile));
+      toast.success("Seller KYC submitted. Data legalitas, lahan, geotag, dan simplisia kini menjadi template dokumen otomatis.");
+      navigate("/seller/dashboard");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to submit Seller KYC");
+    }
   };
 
-  const handleBuyerSubmit = () => {
+  const handleBuyerSubmit = async () => {
     if (!requireLogin()) return;
 
     const requiredFields = [buyerForm.legalName, buyerForm.nibNumber, buyerForm.nikOrNpwp, buyerForm.registeredAddress, buyerForm.phone, buyerForm.email, buyerForm.simplisiaNeeded];
@@ -223,9 +228,13 @@ const KYCOnboarding = () => {
       importDestination: buyerForm.importDestination,
     };
 
-    authService.submitKyc("buyer", buyerProfile);
-    toast.success("Buyer KYC submitted. Preferensi simplisia akan dipakai sebagai dasar rekomendasi dashboard.");
-    navigate("/buyer/dashboard");
+    try {
+      await authService.submitKyc("buyer", buyerProfile);
+      toast.success("Buyer KYC submitted. Preferensi simplisia akan dipakai sebagai dasar rekomendasi dashboard.");
+      navigate("/buyer/dashboard");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to submit Buyer KYC");
+    }
   };
 
   return (

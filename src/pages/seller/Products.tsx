@@ -6,10 +6,10 @@ import { Web3Background } from "@/components/Web3Background";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Package, BarChart3, DollarSign, ShoppingBag } from "lucide-react";
-import { authService } from "@/lib/auth";
+import { useAuth } from "@/contexts/AuthContext";
 
 const SellerProducts = () => {
-  const user = authService.getUser();
+  const { user } = useAuth();
 
   return (
     <div className="min-h-screen flex flex-col gradient-bg relative overflow-hidden">

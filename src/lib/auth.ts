@@ -14,7 +14,18 @@ export interface User {
   roles: UserRole[];
 }
 
+export const KYC_STATUS_LABELS: Record<string, string> = {
+  not_started: "Not Started",
+  pending: "Pending Review",
+  verified: "Verified",
+  rejected: "Rejected",
+};
+
+export const getKycStatusLabel = (status?: string | null) =>
+  (status && KYC_STATUS_LABELS[status]) || "Not Started";
+
 export const authService = {
+  getKycStatusLabel,
   async signUp(email: string, password: string, name: string, role: UserRole) {
     const { data, error } = await supabase.auth.signUp({
       email,

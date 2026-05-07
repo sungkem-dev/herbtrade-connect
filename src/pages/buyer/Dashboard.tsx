@@ -12,12 +12,13 @@ import { BlockchainStats } from "@/components/BlockchainStats";
 import { DashboardSkeleton } from "@/components/DashboardSkeleton";
 import { PageTransition } from "@/components/PageTransition";
 import { Package, ShoppingBag, Truck, Plus, Bot, FileText, SearchCheck, ShieldCheck, Sparkles } from "lucide-react";
-import { authService, type BuyerKycProfile } from "@/lib/auth";
+import { authService } from "@/lib/auth";
+import { useAuth } from "@/contexts/AuthContext";
 
 const BuyerDashboard = () => {
-  const user = authService.getUser();
-  const buyerProfile = user?.role === "buyer" ? (user.kycProfile as BuyerKycProfile | undefined) : undefined;
-  const recommendedSimplisia = buyerProfile?.simplisiaNeeded?.length ? buyerProfile.simplisiaNeeded : ["Jahe", "Kunyit", "Temulawak"];
+  const { user } = useAuth();
+  const buyerProfile: any = undefined;
+  const recommendedSimplisia = ["Jahe", "Kunyit", "Temulawak"];
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
