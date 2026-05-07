@@ -78,7 +78,7 @@ const buildSellerComplianceProfile = (seller: SellerKycProfile): SellerAdministr
 const KYCOnboarding = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const currentUser = authService.getUser();
+  const { user: currentUser } = useAuth();
   const { saveSellerProfile } = useCompliance();
   const initialRole = (searchParams.get("role") === "seller" || searchParams.get("role") === "buyer" ? searchParams.get("role") : "seller") as TradeRole;
   const [selectedRole, setSelectedRole] = useState<TradeRole>(initialRole);
