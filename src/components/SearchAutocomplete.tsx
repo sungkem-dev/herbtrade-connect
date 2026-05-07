@@ -11,7 +11,7 @@ interface SearchAutocompleteProps {
 }
 
 // Mock products for fallback
-const mockProducts: Product[] = [
+const mockProducts: Product[] = ([
   {
     id: "CL001",
     name: "Turmeric",
