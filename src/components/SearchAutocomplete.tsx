@@ -32,7 +32,6 @@ const mockProducts: Product[] = [
     min_order_qty: 10,
     min_order_unit: "kg",
     created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
   },
   {
     id: "CV001",
@@ -54,7 +53,6 @@ const mockProducts: Product[] = [
     min_order_qty: 5,
     min_order_unit: "kg",
     created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
   },
   {
     id: "AP001",
@@ -76,7 +74,6 @@ const mockProducts: Product[] = [
     min_order_qty: 5,
     min_order_unit: "kg",
     created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
   },
   {
     id: "PN001",
@@ -98,7 +95,6 @@ const mockProducts: Product[] = [
     min_order_qty: 10,
     min_order_unit: "kg",
     created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
   },
   {
     id: "MF001",
@@ -120,7 +116,6 @@ const mockProducts: Product[] = [
     min_order_qty: 5,
     min_order_unit: "kg",
     created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
   },
 ];
 
