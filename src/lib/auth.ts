@@ -47,29 +47,44 @@ export const authService = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
 
-    const { data: profile, error: profileError } = await supabase
+    let { data: profile } = await supabase
       .from("profiles")
       .select("id, name, email, company, country, kyc_status")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
 
-    if (profileError) throw profileError;
+    // Auto-create profile row if missing (defensive fallback)
+    if (!profile) {
+      const fallbackName =
+        (user.user_metadata as any)?.name || user.email?.split("@")[0] || "HerBlocX User";
+      const { data: inserted } = await supabase
+        .from("profiles")
+        .insert({ id: user.id, name: fallbackName, email: user.email, kyc_status: "not_started" })
+        .select("id, name, email, company, country, kyc_status")
+        .maybeSingle();
+      profile = inserted ?? {
+        id: user.id,
+        name: fallbackName,
+        email: user.email ?? "",
+        company: null,
+        country: null,
+        kyc_status: "not_started",
+      } as any;
+    }
 
-    const { data: userRoles, error: rolesError } = await supabase
+    const { data: userRoles } = await supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id);
 
-    if (rolesError) throw rolesError;
-
     return {
-      id: profile.id,
-      name: profile.name || user.email?.split("@")[0] || "HerBlocX User",
-      email: profile.email || user.email || "",
-      company: profile.company || "",
-      country: profile.country || "",
-      kycStatus: profile.kyc_status || "not_started",
-      roles: userRoles.map((r) => r.role),
+      id: profile!.id,
+      name: profile!.name || user.email?.split("@")[0] || "HerBlocX User",
+      email: profile!.email || user.email || "",
+      company: profile!.company || "",
+      country: profile!.country || "",
+      kycStatus: (profile!.kyc_status as KycStatus) || "not_started",
+      roles: (userRoles ?? []).map((r) => r.role),
     };
   },
 
