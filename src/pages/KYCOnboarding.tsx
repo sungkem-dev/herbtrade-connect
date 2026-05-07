@@ -141,7 +141,7 @@ const KYCOnboarding = () => {
     return true;
   };
 
-  const handleSellerSubmit = () => {
+  const handleSellerSubmit = async () => {
     if (!requireLogin()) return;
 
     const requiredFields = [
