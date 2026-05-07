@@ -126,7 +126,7 @@ const KYCOnboarding = () => {
     }
 
     if (currentUser.kycStatus === "pending" || currentUser.kycStatus === "verified") {
-      return `${authService.getKycStatusLabel(currentUser.kycStatus)} sebagai ${currentUser.role.toUpperCase()}. Kamu masih bisa memperbarui data KYC jika diperlukan.`;
+      return `${authService.getKycStatusLabel(currentUser.kycStatus)} sebagai ${(currentUser.roles?.[0] || "general").toUpperCase()}. Kamu masih bisa memperbarui data KYC jika diperlukan.`;
     }
 
     return "Akun umum aktif. Kamu bisa melihat marketplace, komunitas, dan fitur umum; transaksi membutuhkan KYC role.";
