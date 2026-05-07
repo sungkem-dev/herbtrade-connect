@@ -189,10 +189,14 @@ const KYCOnboarding = () => {
       businessLicenseNotes: sellerForm.businessLicenseNotes,
     };
 
-    authService.submitKyc("seller", sellerProfile);
-    saveSellerProfile(buildSellerComplianceProfile(sellerProfile));
-    toast.success("Seller KYC submitted. Data legalitas, lahan, geotag, dan simplisia kini menjadi template dokumen otomatis.");
-    navigate("/seller/dashboard");
+    try {
+      await authService.submitKyc("seller", sellerProfile);
+      await saveSellerProfile(buildSellerComplianceProfile(sellerProfile));
+      toast.success("Seller KYC submitted. Data legalitas, lahan, geotag, dan simplisia kini menjadi template dokumen otomatis.");
+      navigate("/seller/dashboard");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to submit Seller KYC");
+    }
   };
 
   const handleBuyerSubmit = () => {
