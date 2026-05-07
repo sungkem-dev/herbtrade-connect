@@ -199,7 +199,7 @@ const KYCOnboarding = () => {
     }
   };
 
-  const handleBuyerSubmit = () => {
+  const handleBuyerSubmit = async () => {
     if (!requireLogin()) return;
 
     const requiredFields = [buyerForm.legalName, buyerForm.nibNumber, buyerForm.nikOrNpwp, buyerForm.registeredAddress, buyerForm.phone, buyerForm.email, buyerForm.simplisiaNeeded];
