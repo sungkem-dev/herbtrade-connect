@@ -117,7 +117,7 @@ const mockProducts: Product[] = ([
     min_order_unit: "kg",
     created_at: new Date().toISOString(),
   },
-];
+] as unknown as Product[]);
 
 export const SearchAutocomplete = ({ onSearch, placeholder = "Search products, suppliers..." }: SearchAutocompleteProps) => {
   const [query, setQuery] = useState("");
