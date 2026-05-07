@@ -11,7 +11,7 @@ interface SearchAutocompleteProps {
 }
 
 // Mock products for fallback
-const mockProducts: Product[] = [
+const mockProducts: Product[] = ([
   {
     id: "CL001",
     name: "Turmeric",
@@ -32,7 +32,6 @@ const mockProducts: Product[] = [
     min_order_qty: 10,
     min_order_unit: "kg",
     created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
   },
   {
     id: "CV001",
@@ -54,7 +53,6 @@ const mockProducts: Product[] = [
     min_order_qty: 5,
     min_order_unit: "kg",
     created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
   },
   {
     id: "AP001",
@@ -76,7 +74,6 @@ const mockProducts: Product[] = [
     min_order_qty: 5,
     min_order_unit: "kg",
     created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
   },
   {
     id: "PN001",
@@ -98,7 +95,6 @@ const mockProducts: Product[] = [
     min_order_qty: 10,
     min_order_unit: "kg",
     created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
   },
   {
     id: "MF001",
@@ -120,9 +116,8 @@ const mockProducts: Product[] = [
     min_order_qty: 5,
     min_order_unit: "kg",
     created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
   },
-];
+] as unknown as Product[]);
 
 export const SearchAutocomplete = ({ onSearch, placeholder = "Search products, suppliers..." }: SearchAutocompleteProps) => {
   const [query, setQuery] = useState("");

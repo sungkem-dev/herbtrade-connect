@@ -273,14 +273,3 @@ What would you like to know?`;
 
 export default AIAssistant;
 
-// Helper function to get current season (should be imported from seasons.ts)
-function getCurrentSeason() {
-  const month = new Date().getMonth();
-  const seasons = [
-    { nameId: "Winter Harvest", description: "Peak season for dried herbs and root crops" },
-    { nameId: "Spring Growth", description: "Fresh herbs and new growth" },
-    { nameId: "Summer Peak", description: "Maximum availability of fresh products" },
-    { nameId: "Autumn Transition", description: "Harvest season for most crops" },
-  ];
-  return seasons[Math.floor(month / 3)];
-}
