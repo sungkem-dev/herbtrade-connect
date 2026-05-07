@@ -152,11 +152,8 @@ export const authService = {
       if (sellerKycError) throw sellerKycError;
     }
 
-    // Add role to user_roles table
-    const { error: roleError } = await supabase.from("user_roles").insert({
-      user_id: user.id,
-      role: role,
-    });
+    // Add role via SECURITY DEFINER RPC (only buyer/seller permitted)
+    const { error: roleError } = await supabase.rpc("assign_role_to_self", { _role: role });
     if (roleError) throw roleError;
   },
 };
