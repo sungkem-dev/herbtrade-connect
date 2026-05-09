@@ -10,12 +10,15 @@ import { Badge } from "@/components/ui/badge";
 import { BlockchainStats } from "@/components/BlockchainStats";
 import { DashboardSkeleton } from "@/components/DashboardSkeleton";
 import { PageTransition } from "@/components/PageTransition";
-import { Package, Plus, BarChart3, DollarSign, ShoppingCart, TrendingUp, Wallet, Building2, CreditCard, Smartphone, Bot, QrCode, ShieldCheck } from "lucide-react";
+import { Package, Plus, BarChart3, DollarSign, ShoppingCart, TrendingUp, Wallet, Building2, CreditCard, Smartphone, Bot, QrCode, ShieldCheck, AlertTriangle, RefreshCw, CheckCircle2, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { authService } from "@/lib/auth";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCompliance } from "@/contexts/ComplianceContext";
 
 const SellerDashboard = () => {
   const { user } = useAuth();
+  const { realtimeStatus, retryRealtime } = useCompliance();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
