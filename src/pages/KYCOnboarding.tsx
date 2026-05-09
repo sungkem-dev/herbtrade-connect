@@ -73,10 +73,11 @@ const buildSellerAdminProfileRow = (seller: SellerKycProfile) => {
 const KYCOnboarding = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, refreshUser } = useAuth();
   const { saveSellerProfile } = useCompliance();
   const initialRole = (searchParams.get("role") === "seller" || searchParams.get("role") === "buyer" ? searchParams.get("role") : "seller") as TradeRole;
   const [selectedRole, setSelectedRole] = useState<TradeRole>(initialRole);
+  const [submittingRole, setSubmittingRole] = useState<TradeRole | null>(null);
 
   const [sellerForm, setSellerForm] = useState({
     legalEntityType: "business_entity" as LegalEntityType,
