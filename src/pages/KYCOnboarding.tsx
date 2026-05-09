@@ -185,13 +185,26 @@ const KYCOnboarding = () => {
       businessLicenseNotes: sellerForm.businessLicenseNotes,
     };
 
+    setSubmittingRole("seller");
     try {
+      // 1. Persist KYC + grant role + auto-verify status (atomic from UX perspective)
       await authService.submitKyc("seller", sellerProfile);
-      await saveSellerProfile(buildSellerComplianceProfile(sellerProfile));
-      toast.success("Seller KYC submitted. Data legalitas, lahan, geotag, dan simplisia kini menjadi template dokumen otomatis.");
+      // 2. Persist seller_admin_profile (compliance template). If this fails, KYC still saved.
+      try {
+        await saveSellerProfile(buildSellerAdminProfileRow(sellerProfile));
+      } catch (complianceErr: any) {
+        console.error("[KYC] saveSellerProfile failed (non-fatal):", complianceErr);
+        toast.warning("KYC tersimpan, tapi profil compliance gagal disinkronkan. Silakan retry dari halaman Compliance Onboarding.");
+      }
+      // 3. Refresh client-side user/roles so dashboard sees verified status immediately
+      await refreshUser();
+      toast.success("Seller KYC verified. Data legalitas, lahan, geotag, dan simplisia kini menjadi template dokumen otomatis.");
       navigate("/seller/dashboard");
     } catch (err: any) {
+      console.error("[KYC] Seller submit failed:", err);
       toast.error(err?.message || "Failed to submit Seller KYC");
+    } finally {
+      setSubmittingRole(null);
     }
   };
 
@@ -224,12 +237,17 @@ const KYCOnboarding = () => {
       importDestination: buyerForm.importDestination,
     };
 
+    setSubmittingRole("buyer");
     try {
       await authService.submitKyc("buyer", buyerProfile);
-      toast.success("Buyer KYC submitted. Preferensi simplisia akan dipakai sebagai dasar rekomendasi dashboard.");
+      await refreshUser();
+      toast.success("Buyer KYC verified. Preferensi simplisia akan dipakai sebagai dasar rekomendasi dashboard.");
       navigate("/buyer/dashboard");
     } catch (err: any) {
+      console.error("[KYC] Buyer submit failed:", err);
       toast.error(err?.message || "Failed to submit Buyer KYC");
+    } finally {
+      setSubmittingRole(null);
     }
   };
 
