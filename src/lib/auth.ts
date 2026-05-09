@@ -122,49 +122,77 @@ export const authService = {
   },
 
   async submitKyc(role: UserRole, kycData: any) {
-    const user = await this.getCurrentUser();
-    if (!user) throw new Error("User not authenticated.");
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("User not authenticated. Silakan login kembali.");
 
-    // Update profile kyc_status
-    const { error: profileUpdateError } = await supabase
-      .from("profiles")
-      .update({ kyc_status: "pending" })
-      .eq("id", user.id);
-    if (profileUpdateError) throw profileUpdateError;
-
-    // Insert KYC data into appropriate table
-    if (role === "buyer") {
-      const { error: buyerKycError } = await supabase.from("buyer_kyc").insert({
-        user_id: user.id,
-        legal_name: kycData.legalName,
-        nib: kycData.nibNumber,
-        npwp: kycData.nikOrNpwp,
-        simplisia_needed: kycData.simplisiaNeeded,
-        purchase_volume_kg: kycData.purchaseVolumeKg,
-        preferred_origin: kycData.preferredOrigin,
-        import_destination: kycData.importDestination,
-      });
-      if (buyerKycError) throw buyerKycError;
-    } else if (role === "seller") {
-      const { error: sellerKycError } = await supabase.from("seller_kyc").insert({
-        user_id: user.id,
-        legal_name: kycData.legalName,
-        nib: kycData.nibNumber,
-        npwp: kycData.nikOrNpwp,
-        land_name: kycData.landName,
-        land_location: kycData.landLocation,
-        land_area_hectares: kycData.landAreaHectares,
-        geotag_lat: kycData.geotagLatitude,
-        geotag_lng: kycData.geotagLongitude,
-        simplisia_offered: kycData.simplisiaOffered,
-        cultivation_method: kycData.cultivationMethod,
-        monthly_capacity_kg: kycData.monthlyCapacityKg,
-      });
-      if (sellerKycError) throw sellerKycError;
+    if (role !== "buyer" && role !== "seller") {
+      throw new Error(`Role "${role}" tidak diperkenankan untuk self-KYC.`);
     }
 
-    // Add role via SECURITY DEFINER RPC (only buyer/seller permitted)
+    // Validate minimum KYC payload up-front so navigation never happens on bad data
+    const requiredCommon = ["legalName", "nibNumber", "nikOrNpwp"];
+    const missing = requiredCommon.filter((k) => !String(kycData?.[k] ?? "").trim());
+    if (missing.length) {
+      throw new Error(`Field wajib belum lengkap: ${missing.join(", ")}`);
+    }
+
+    // 1. Insert / upsert KYC data BEFORE granting role + verified status,
+    //    so a failure here leaves the account untouched.
+    if (role === "buyer") {
+      if (!Array.isArray(kycData.simplisiaNeeded) || kycData.simplisiaNeeded.length === 0) {
+        throw new Error("Pilih minimal satu simplisia yang dibutuhkan.");
+      }
+      const { error: buyerKycError } = await supabase.from("buyer_kyc").upsert(
+        {
+          user_id: user.id,
+          legal_name: kycData.legalName,
+          nib: kycData.nibNumber,
+          npwp: kycData.nikOrNpwp,
+          simplisia_needed: kycData.simplisiaNeeded,
+          purchase_volume_kg: Number(kycData.purchaseVolumeKg) || null,
+          preferred_origin: kycData.preferredOrigin ?? null,
+          import_destination: kycData.importDestination ?? null,
+        },
+        { onConflict: "user_id" },
+      );
+      if (buyerKycError) throw new Error(`Gagal menyimpan Buyer KYC: ${buyerKycError.message}`);
+    } else {
+      const requiredSeller = ["landName", "landLocation"];
+      const missingSeller = requiredSeller.filter((k) => !String(kycData?.[k] ?? "").trim());
+      if (missingSeller.length) {
+        throw new Error(`Field lahan wajib belum lengkap: ${missingSeller.join(", ")}`);
+      }
+      const { error: sellerKycError } = await supabase.from("seller_kyc").upsert(
+        {
+          user_id: user.id,
+          legal_name: kycData.legalName,
+          nib: kycData.nibNumber,
+          npwp: kycData.nikOrNpwp,
+          land_name: kycData.landName,
+          land_location: kycData.landLocation,
+          land_area_hectares: Number(kycData.landAreaHectares) || null,
+          geotag_lat: Number(kycData.geotagLatitude) || null,
+          geotag_lng: Number(kycData.geotagLongitude) || null,
+          simplisia_offered: Array.isArray(kycData.simplisiaOffered) ? kycData.simplisiaOffered : [],
+          cultivation_method: kycData.cultivationMethod ?? null,
+          monthly_capacity_kg: Number(kycData.monthlyCapacityKg) || null,
+        },
+        { onConflict: "user_id" },
+      );
+      if (sellerKycError) throw new Error(`Gagal menyimpan Seller KYC: ${sellerKycError.message}`);
+    }
+
+    // 2. Grant role via SECURITY DEFINER RPC.
     const { error: roleError } = await supabase.rpc("assign_role_to_self", { _role: role });
-    if (roleError) throw roleError;
+    if (roleError) throw new Error(`Gagal mengaktifkan role ${role}: ${roleError.message}`);
+
+    // 3. Auto-approve KYC (review step disabled per product decision).
+    const { error: profileUpdateError } = await supabase
+      .from("profiles")
+      .update({ kyc_status: "verified" })
+      .eq("id", user.id);
+    if (profileUpdateError) {
+      throw new Error(`Gagal memperbarui status KYC: ${profileUpdateError.message}`);
+    }
   },
 };
