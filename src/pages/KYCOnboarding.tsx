@@ -364,7 +364,9 @@ const KYCOnboarding = () => {
                     <p className="mt-2 text-sm text-muted-foreground">Setelah submit, data Seller otomatis mengisi profil compliance yang dipakai untuk Quotation, Bill of Lading, packing list, invoice, certificate of origin, dan QR product journey.</p>
                   </div>
 
-                  <Button className="btn-hero w-full" onClick={handleSellerSubmit}>Submit Seller KYC</Button>
+                  <Button className="btn-hero w-full" onClick={handleSellerSubmit} disabled={submittingRole !== null}>
+                    {submittingRole === "seller" ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Memverifikasi Seller KYC...</> : "Submit Seller KYC"}
+                  </Button>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -406,7 +408,9 @@ const KYCOnboarding = () => {
                     <p className="mt-2 text-sm text-muted-foreground">Kebutuhan simplisia Buyer akan dipakai untuk rekomendasi dashboard, shortcut pencarian marketplace, dan product request.</p>
                   </div>
 
-                  <Button className="btn-web3 w-full" onClick={handleBuyerSubmit}>Submit Buyer KYC</Button>
+                  <Button className="btn-web3 w-full" onClick={handleBuyerSubmit} disabled={submittingRole !== null}>
+                    {submittingRole === "buyer" ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Memverifikasi Buyer KYC...</> : "Submit Buyer KYC"}
+                  </Button>
                 </CardContent>
               </Card>
             </TabsContent>
