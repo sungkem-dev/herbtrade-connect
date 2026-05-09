@@ -10,12 +10,15 @@ import { Badge } from "@/components/ui/badge";
 import { BlockchainStats } from "@/components/BlockchainStats";
 import { DashboardSkeleton } from "@/components/DashboardSkeleton";
 import { PageTransition } from "@/components/PageTransition";
-import { Package, Plus, BarChart3, DollarSign, ShoppingCart, TrendingUp, Wallet, Building2, CreditCard, Smartphone, Bot, QrCode, ShieldCheck } from "lucide-react";
+import { Package, Plus, BarChart3, DollarSign, ShoppingCart, TrendingUp, Wallet, Building2, CreditCard, Smartphone, Bot, QrCode, ShieldCheck, AlertTriangle, RefreshCw, CheckCircle2, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { authService } from "@/lib/auth";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCompliance } from "@/contexts/ComplianceContext";
 
 const SellerDashboard = () => {
   const { user } = useAuth();
+  const { realtimeStatus, retryRealtime } = useCompliance();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -56,6 +59,38 @@ const SellerDashboard = () => {
               <p className="text-muted-foreground text-lg">
                 Manage your products, track sales, and grow your herbal business on the blockchain.
               </p>
+            </motion.div>
+
+            <motion.div
+              className="mb-4"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.12 }}
+            >
+              {realtimeStatus === "error" || realtimeStatus === "offline" ? (
+                <div className="glass-card border border-destructive/40 rounded-xl p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="h-5 w-5 text-destructive mt-0.5" />
+                    <div>
+                      <p className="font-medium">Realtime compliance feed offline</p>
+                      <p className="text-xs text-muted-foreground">
+                        Data tetap aman. Kami menampilkan snapshot terakhir dan otomatis mencoba ulang. Klik retry untuk reconnect sekarang.
+                      </p>
+                    </div>
+                  </div>
+                  <Button size="sm" variant="outline" onClick={retryRealtime}>
+                    <RefreshCw className="h-4 w-4 mr-2" /> Retry
+                  </Button>
+                </div>
+              ) : realtimeStatus === "connecting" ? (
+                <div className="glass-card border border-border/40 rounded-xl p-3 flex items-center gap-2 text-xs text-muted-foreground">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> Menyinkronkan compliance feed realtime...
+                </div>
+              ) : (
+                <div className="glass-card border border-primary/30 rounded-xl p-3 flex items-center gap-2 text-xs text-muted-foreground">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-primary" /> Compliance feed realtime aktif.
+                </div>
+              )}
             </motion.div>
 
             <motion.div

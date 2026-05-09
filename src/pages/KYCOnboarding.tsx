@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { authService, type BuyerKycProfile, type LegalEntityType, type SellerKycProfile, type TradeRole } from "@/lib/auth";
 import { useAuth } from "@/contexts/AuthContext";
+import { Loader2 } from "lucide-react";
 import { createFarmerIdentity } from "@/lib/complianceUtils";
 import { hashFromSeed, numberFromSeed } from "@/lib/mockChain";
 import { useCompliance } from "@/contexts/ComplianceContext";
@@ -31,7 +32,8 @@ const splitValues = (value: string) =>
     .map((item) => item.trim())
     .filter(Boolean);
 
-const buildSellerComplianceProfile = (seller: SellerKycProfile): SellerAdministrativeProfile => {
+// Build the snake_case row expected by the seller_admin_profiles table.
+const buildSellerAdminProfileRow = (seller: SellerKycProfile) => {
   const seed = `${seller.nibNumber}-${seller.legalName}-${seller.landName}`;
   const simplisiaTypes = seller.simplisiaOffered.length
     ? seller.simplisiaOffered.map((item) => (simplisiaOptions.includes(item as SimplisiaType) ? (item as SimplisiaType) : "Other" as SimplisiaType))
@@ -45,43 +47,37 @@ const buildSellerComplianceProfile = (seller: SellerKycProfile): SellerAdministr
     longitude: seller.geotagLongitude,
     landAreaHectares: seller.landAreaHectares,
     plantsCultivated: simplisiaTypes,
-      cultivationMethod: seller.cultivationMethod as SellerAdministrativeProfile["farmerIdentity"]["cultivationMethod"],
+    cultivationMethod: seller.cultivationMethod as SellerAdministrativeProfile["farmerIdentity"]["cultivationMethod"],
   });
 
   return {
-    id: `SELLER-${numberFromSeed(seed, 1000, 9999)}`,
-    sellerType: seller.legalEntityType,
-    nik: seller.legalEntityType === "individual" ? seller.nikOrNpwp : "",
-    npwp: seller.legalEntityType === "business_entity" ? seller.nikOrNpwp : "",
-    legalName: seller.legalName,
-    businessEntityName: seller.businessEntityName,
-    email: seller.email,
-    phone: seller.phone,
-    registeredAddress: seller.registeredAddress,
-    exportLicenseNumber: `EXP-${seller.nibNumber}-${numberFromSeed(seed, 100, 999)}`,
-    nibNumber: seller.nibNumber,
-    hsCode: "0910.99",
-    destinationMarkets: marketOptions.slice(1, 4),
-    simplisiaTypes,
-    bankName: "Bank account pending verification",
-    bankAccountNumber: "Pending settlement setup",
-    bankAccountName: seller.businessEntityName || seller.legalName,
-    farmerIdentity: {
+    seller_type: seller.legalEntityType,
+    nik: seller.legalEntityType === "individual" ? seller.nikOrNpwp : null,
+    npwp: seller.legalEntityType === "business_entity" ? seller.nikOrNpwp : null,
+    export_license: `EXP-${seller.nibNumber}-${numberFromSeed(seed, 100, 999)}`,
+    hs_code: "0910.99",
+    destination_markets: marketOptions.slice(1, 4),
+    farmer_identity: {
       ...farmerIdentity,
       txHash: hashFromSeed(`${seed}-seller-kyc-farmer`),
-    },
-    completionStatus: "complete",
-    updatedAt: nowIso(),
+      simplisiaTypes,
+    } as any,
+    bank_info: {
+      bankName: "Bank account pending verification",
+      bankAccountNumber: "Pending settlement setup",
+      bankAccountName: seller.businessEntityName || seller.legalName,
+    } as any,
   };
 };
 
 const KYCOnboarding = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, refreshUser } = useAuth();
   const { saveSellerProfile } = useCompliance();
   const initialRole = (searchParams.get("role") === "seller" || searchParams.get("role") === "buyer" ? searchParams.get("role") : "seller") as TradeRole;
   const [selectedRole, setSelectedRole] = useState<TradeRole>(initialRole);
+  const [submittingRole, setSubmittingRole] = useState<TradeRole | null>(null);
 
   const [sellerForm, setSellerForm] = useState({
     legalEntityType: "business_entity" as LegalEntityType,
@@ -189,13 +185,26 @@ const KYCOnboarding = () => {
       businessLicenseNotes: sellerForm.businessLicenseNotes,
     };
 
+    setSubmittingRole("seller");
     try {
+      // 1. Persist KYC + grant role + auto-verify status (atomic from UX perspective)
       await authService.submitKyc("seller", sellerProfile);
-      await saveSellerProfile(buildSellerComplianceProfile(sellerProfile));
-      toast.success("Seller KYC submitted. Data legalitas, lahan, geotag, dan simplisia kini menjadi template dokumen otomatis.");
+      // 2. Persist seller_admin_profile (compliance template). If this fails, KYC still saved.
+      try {
+        await saveSellerProfile(buildSellerAdminProfileRow(sellerProfile));
+      } catch (complianceErr: any) {
+        console.error("[KYC] saveSellerProfile failed (non-fatal):", complianceErr);
+        toast.warning("KYC tersimpan, tapi profil compliance gagal disinkronkan. Silakan retry dari halaman Compliance Onboarding.");
+      }
+      // 3. Refresh client-side user/roles so dashboard sees verified status immediately
+      await refreshUser();
+      toast.success("Seller KYC verified. Data legalitas, lahan, geotag, dan simplisia kini menjadi template dokumen otomatis.");
       navigate("/seller/dashboard");
     } catch (err: any) {
+      console.error("[KYC] Seller submit failed:", err);
       toast.error(err?.message || "Failed to submit Seller KYC");
+    } finally {
+      setSubmittingRole(null);
     }
   };
 
@@ -228,12 +237,17 @@ const KYCOnboarding = () => {
       importDestination: buyerForm.importDestination,
     };
 
+    setSubmittingRole("buyer");
     try {
       await authService.submitKyc("buyer", buyerProfile);
-      toast.success("Buyer KYC submitted. Preferensi simplisia akan dipakai sebagai dasar rekomendasi dashboard.");
+      await refreshUser();
+      toast.success("Buyer KYC verified. Preferensi simplisia akan dipakai sebagai dasar rekomendasi dashboard.");
       navigate("/buyer/dashboard");
     } catch (err: any) {
+      console.error("[KYC] Buyer submit failed:", err);
       toast.error(err?.message || "Failed to submit Buyer KYC");
+    } finally {
+      setSubmittingRole(null);
     }
   };
 
@@ -350,7 +364,9 @@ const KYCOnboarding = () => {
                     <p className="mt-2 text-sm text-muted-foreground">Setelah submit, data Seller otomatis mengisi profil compliance yang dipakai untuk Quotation, Bill of Lading, packing list, invoice, certificate of origin, dan QR product journey.</p>
                   </div>
 
-                  <Button className="btn-hero w-full" onClick={handleSellerSubmit}>Submit Seller KYC</Button>
+                  <Button className="btn-hero w-full" onClick={handleSellerSubmit} disabled={submittingRole !== null}>
+                    {submittingRole === "seller" ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Memverifikasi Seller KYC...</> : "Submit Seller KYC"}
+                  </Button>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -392,7 +408,9 @@ const KYCOnboarding = () => {
                     <p className="mt-2 text-sm text-muted-foreground">Kebutuhan simplisia Buyer akan dipakai untuk rekomendasi dashboard, shortcut pencarian marketplace, dan product request.</p>
                   </div>
 
-                  <Button className="btn-web3 w-full" onClick={handleBuyerSubmit}>Submit Buyer KYC</Button>
+                  <Button className="btn-web3 w-full" onClick={handleBuyerSubmit} disabled={submittingRole !== null}>
+                    {submittingRole === "buyer" ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Memverifikasi Buyer KYC...</> : "Submit Buyer KYC"}
+                  </Button>
                 </CardContent>
               </Card>
             </TabsContent>

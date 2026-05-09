@@ -14,20 +14,62 @@ import { PageTransition } from "@/components/PageTransition";
 import { Package, ShoppingBag, Truck, Plus, Bot, FileText, SearchCheck, ShieldCheck, Sparkles } from "lucide-react";
 import { authService } from "@/lib/auth";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+
+const DEFAULT_RECOMMENDED = ["Jahe", "Kunyit", "Temulawak"];
 
 const BuyerDashboard = () => {
   const { user } = useAuth();
-  const buyerProfile: any = undefined;
-  const recommendedSimplisia = ["Jahe", "Kunyit", "Temulawak"];
+  const [buyerProfile, setBuyerProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate loading time
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, []);
+    let cancelled = false;
+    const startedAt = Date.now();
+
+    const loadBuyerKyc = async () => {
+      try {
+        if (!user) {
+          if (!cancelled) setBuyerProfile(null);
+          return;
+        }
+        // Only buyers have buyer_kyc rows; RLS already restricts to owner.
+        const isBuyer = (user.roles ?? []).includes("buyer");
+        if (!isBuyer) {
+          if (!cancelled) setBuyerProfile(null);
+          return;
+        }
+        const { data, error } = await supabase
+          .from("buyer_kyc")
+          .select("legal_name, nib, simplisia_needed, purchase_volume_kg, preferred_origin, import_destination")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (error) {
+          console.error("[BuyerDashboard] buyer_kyc load failed:", error);
+          if (!cancelled) setBuyerProfile(null);
+          return;
+        }
+        if (!cancelled) setBuyerProfile(data ?? null);
+      } finally {
+        // Maintain the 1.5s premium loader minimum
+        const elapsed = Date.now() - startedAt;
+        const remaining = Math.max(0, 1500 - elapsed);
+        setTimeout(() => {
+          if (!cancelled) setIsLoading(false);
+        }, remaining);
+      }
+    };
+
+    loadBuyerKyc();
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  const recommendedSimplisia: string[] =
+    Array.isArray(buyerProfile?.simplisia_needed) && buyerProfile.simplisia_needed.length
+      ? buyerProfile.simplisia_needed
+      : DEFAULT_RECOMMENDED;
 
   return (
     <div className="min-h-screen gradient-bg relative">
@@ -39,8 +81,7 @@ const BuyerDashboard = () => {
       ) : (
         <PageTransition>
           <div className="container mx-auto px-4 py-24 relative z-10">
-            {/* Welcome Section */}
-            <motion.div 
+            <motion.div
               className="mb-8"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -70,7 +111,7 @@ const BuyerDashboard = () => {
                       <h2 className="text-2xl font-semibold mb-2">{authService.getKycStatusLabel(user?.kycStatus)}</h2>
                       <p className="text-sm text-muted-foreground max-w-2xl">
                         {buyerProfile
-                          ? `Legalitas ${buyerProfile.businessEntityName || buyerProfile.legalName} dengan NIB ${buyerProfile.nibNumber} sudah menjadi dasar transaksi dan preferensi sourcing.`
+                          ? `Legalitas ${buyerProfile.legal_name} dengan NIB ${buyerProfile.nib} sudah menjadi dasar transaksi dan preferensi sourcing.`
                           : "Lengkapi Buyer KYC agar transaksi aktif dan dashboard dapat memberi rekomendasi simplisia sesuai kebutuhan perusahaan."}
                       </p>
                     </div>
@@ -93,14 +134,13 @@ const BuyerDashboard = () => {
                   </div>
                   <p className="text-sm text-muted-foreground">
                     {buyerProfile
-                      ? `${buyerProfile.purchaseVolumeKg.toLocaleString()} kg/month target, preferred origin: ${buyerProfile.preferredOrigin}.`
+                      ? `${Number(buyerProfile.purchase_volume_kg ?? 0).toLocaleString()} kg/month target, preferred origin: ${buyerProfile.preferred_origin || "-"}.`
                       : "Rekomendasi awal akan dipersonalisasi setelah kebutuhan simplisia diisi pada Buyer KYC."}
                   </p>
                 </CardContent>
               </Card>
             </motion.div>
 
-            {/* Quick Actions */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               {[
                 { to: "/shop", icon: Plus, title: "Browse Products", desc: "Explore marketplace", color: "primary", glow: "glow-primary" },
@@ -126,9 +166,7 @@ const BuyerDashboard = () => {
                           </div>
                           <div>
                             <h3 className="font-semibold text-lg">{item.title}</h3>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {item.desc}
-                            </p>
+                            <p className="text-sm text-muted-foreground mt-1">{item.desc}</p>
                           </div>
                         </div>
                       </CardContent>
@@ -138,8 +176,6 @@ const BuyerDashboard = () => {
               ))}
             </div>
 
-
-            {/* Blockchain Stats */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
