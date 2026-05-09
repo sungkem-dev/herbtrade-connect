@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { authService, type BuyerKycProfile, type LegalEntityType, type SellerKycProfile, type TradeRole } from "@/lib/auth";
 import { useAuth } from "@/contexts/AuthContext";
+import { Loader2 } from "lucide-react";
 import { createFarmerIdentity } from "@/lib/complianceUtils";
 import { hashFromSeed, numberFromSeed } from "@/lib/mockChain";
 import { useCompliance } from "@/contexts/ComplianceContext";
@@ -31,7 +32,8 @@ const splitValues = (value: string) =>
     .map((item) => item.trim())
     .filter(Boolean);
 
-const buildSellerComplianceProfile = (seller: SellerKycProfile): SellerAdministrativeProfile => {
+// Build the snake_case row expected by the seller_admin_profiles table.
+const buildSellerAdminProfileRow = (seller: SellerKycProfile) => {
   const seed = `${seller.nibNumber}-${seller.legalName}-${seller.landName}`;
   const simplisiaTypes = seller.simplisiaOffered.length
     ? seller.simplisiaOffered.map((item) => (simplisiaOptions.includes(item as SimplisiaType) ? (item as SimplisiaType) : "Other" as SimplisiaType))
@@ -45,33 +47,26 @@ const buildSellerComplianceProfile = (seller: SellerKycProfile): SellerAdministr
     longitude: seller.geotagLongitude,
     landAreaHectares: seller.landAreaHectares,
     plantsCultivated: simplisiaTypes,
-      cultivationMethod: seller.cultivationMethod as SellerAdministrativeProfile["farmerIdentity"]["cultivationMethod"],
+    cultivationMethod: seller.cultivationMethod as SellerAdministrativeProfile["farmerIdentity"]["cultivationMethod"],
   });
 
   return {
-    id: `SELLER-${numberFromSeed(seed, 1000, 9999)}`,
-    sellerType: seller.legalEntityType,
-    nik: seller.legalEntityType === "individual" ? seller.nikOrNpwp : "",
-    npwp: seller.legalEntityType === "business_entity" ? seller.nikOrNpwp : "",
-    legalName: seller.legalName,
-    businessEntityName: seller.businessEntityName,
-    email: seller.email,
-    phone: seller.phone,
-    registeredAddress: seller.registeredAddress,
-    exportLicenseNumber: `EXP-${seller.nibNumber}-${numberFromSeed(seed, 100, 999)}`,
-    nibNumber: seller.nibNumber,
-    hsCode: "0910.99",
-    destinationMarkets: marketOptions.slice(1, 4),
-    simplisiaTypes,
-    bankName: "Bank account pending verification",
-    bankAccountNumber: "Pending settlement setup",
-    bankAccountName: seller.businessEntityName || seller.legalName,
-    farmerIdentity: {
+    seller_type: seller.legalEntityType,
+    nik: seller.legalEntityType === "individual" ? seller.nikOrNpwp : null,
+    npwp: seller.legalEntityType === "business_entity" ? seller.nikOrNpwp : null,
+    export_license: `EXP-${seller.nibNumber}-${numberFromSeed(seed, 100, 999)}`,
+    hs_code: "0910.99",
+    destination_markets: marketOptions.slice(1, 4),
+    farmer_identity: {
       ...farmerIdentity,
       txHash: hashFromSeed(`${seed}-seller-kyc-farmer`),
-    },
-    completionStatus: "complete",
-    updatedAt: nowIso(),
+      simplisiaTypes,
+    } as any,
+    bank_info: {
+      bankName: "Bank account pending verification",
+      bankAccountNumber: "Pending settlement setup",
+      bankAccountName: seller.businessEntityName || seller.legalName,
+    } as any,
   };
 };
 
