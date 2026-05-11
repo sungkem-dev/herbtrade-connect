@@ -53,31 +53,24 @@ import { UserRole } from "@/lib/auth";
 const queryClient = new QueryClient();
 
 const RequireRole = ({ role, children }: { role: UserRole; children: ReactNode }) => {
-  const { user, loading, isKycVerified, hasRole } = useAuth();
-  const [authorized, setAuthorized] = useState(false);
-
-  useEffect(() => {
-    const checkAuthorization = async () => {
-      if (!loading && user) {
-        const verified = await isKycVerified();
-        const hasRequiredRole = await hasRole(role);
-        setAuthorized(verified && hasRequiredRole);
-      } else if (!loading && !user) {
-        setAuthorized(false);
-      }
-    };
-    checkAuthorization();
-  }, [user, loading, role, isKycVerified, hasRole]);
+  const { user, loading } = useAuth();
 
   if (loading) {
-    return <div>Loading authentication...</div>; // Or a more sophisticated loader
+    return <div>Loading authentication...</div>;
   }
 
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  if (!authorized) {
+  // Derive authorization synchronously from the user object that AuthContext
+  // already loaded (profile.kyc_status + user_roles). Doing async re-fetches
+  // here caused a race where <Navigate> fired before the check resolved,
+  // bouncing the user back to /kyc right after a successful KYC submit.
+  const verified = user.kycStatus === "verified";
+  const hasRequiredRole = (user.roles || []).includes(role);
+
+  if (!verified || !hasRequiredRole) {
     return <Navigate to={`/kyc?role=${role}`} replace />;
   }
 
