@@ -856,6 +856,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      set_active_trade_role: {
+        Args: { _role: Database["public"]["Enums"]["app_role"] }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "buyer" | "seller" | "admin"
