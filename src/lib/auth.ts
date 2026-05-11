@@ -182,17 +182,13 @@ export const authService = {
       if (sellerKycError) throw new Error(`Gagal menyimpan Seller KYC: ${sellerKycError.message}`);
     }
 
-    // 2. Grant role via SECURITY DEFINER RPC.
-    const { error: roleError } = await supabase.rpc("assign_role_to_self", { _role: role });
-    if (roleError) throw new Error(`Gagal mengaktifkan role ${role}: ${roleError.message}`);
-
-    // 3. Auto-approve KYC (review step disabled per product decision).
-    const { error: profileUpdateError } = await supabase
-      .from("profiles")
-      .update({ kyc_status: "verified" })
-      .eq("id", user.id);
-    if (profileUpdateError) {
-      throw new Error(`Gagal memperbarui status KYC: ${profileUpdateError.message}`);
+    // 2. Atomic: replace any prior trade role with the freshly chosen one
+    //    AND mark KYC as verified, in a single SECURITY DEFINER RPC.
+    //    This guarantees a buyer submission never leaves the user as seller
+    //    (or vice-versa).
+    const { error: rpcError } = await supabase.rpc("set_active_trade_role", { _role: role });
+    if (rpcError) {
+      throw new Error(`Gagal mengaktifkan role ${role}: ${rpcError.message}`);
     }
   },
 };
